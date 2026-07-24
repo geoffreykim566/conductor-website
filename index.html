@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Conductor — AI Assistant for Logic Pro</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #141415;
+      --surface:  #1c1c1e;
+      --surface2: #2c2c2e;
+      --border:   #2a2a2c;
+      --border2:  #38383a;
+      --label:    #f2f2f7;
+      --secondary:#8e8e93;
+      --blue:     #0a84ff;
+      --blue-h:   #409cff;
+      --mono:     "Menlo", monospace;
+      --sans:     -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--label);
+      font-family: var(--sans);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* ── NAV ── */
+    nav {
+      width: 100%;
+      max-width: 900px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 24px 32px;
+    }
+
+    .nav-logo {
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--secondary);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .nav-badge {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--blue);
+      border: 1px solid var(--blue);
+      border-radius: 4px;
+      padding: 2px 7px;
+      letter-spacing: 0.5px;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      width: 100%;
+      max-width: 680px;
+      padding: 80px 32px 60px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .hero h1 {
+      font-size: clamp(48px, 8vw, 72px);
+      font-weight: 700;
+      line-height: 1.05;
+      letter-spacing: -1.5px;
+      color: var(--label);
+    }
+
+    .hero-tag {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--blue);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+
+    .hero-version {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--secondary);
+      letter-spacing: 0.5px;
+      margin-top: -8px;
+    }
+
+    .hero p {
+      font-size: 17px;
+      line-height: 1.65;
+      color: var(--secondary);
+      max-width: 520px;
+    }
+
+    .download-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--blue);
+      color: #fff;
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      padding: 14px 28px;
+      border-radius: 12px;
+      margin-top: 8px;
+      transition: background 0.15s ease, transform 0.1s ease;
+    }
+
+    .download-btn:hover {
+      background: var(--blue-h);
+      transform: translateY(-1px);
+    }
+
+    .download-btn svg {
+      width: 16px;
+      height: 16px;
+      fill: #fff;
+    }
+
+    .download-meta {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--secondary);
+      letter-spacing: 0.5px;
+    }
+
+    /* ── DIVIDER ── */
+    .divider {
+      width: 100%;
+      max-width: 680px;
+      height: 1px;
+      background: var(--border);
+      margin: 0 32px;
+    }
+
+    /* ── STEPS ── */
+    .steps {
+      width: 100%;
+      max-width: 680px;
+      padding: 60px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+    }
+
+    .steps-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--label);
+      letter-spacing: -0.5px;
+    }
+
+    .step {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+    }
+
+    .step-num {
+      flex-shrink: 0;
+      width: 28px;
+      height: 28px;
+      background: var(--blue);
+      color: #fff;
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 2px;
+    }
+
+    .step-body h3 {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--label);
+      margin-bottom: 6px;
+    }
+
+    .step-body p {
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--secondary);
+    }
+
+    .step-body a {
+      color: var(--blue);
+      text-decoration: none;
+    }
+
+    .step-body a:hover {
+      color: var(--blue-h);
+      text-decoration: underline;
+    }
+
+    .code {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 12px;
+      background: var(--surface2);
+      color: var(--label);
+      border: 1px solid var(--border2);
+      border-radius: 5px;
+      padding: 1px 7px;
+    }
+
+    .callout {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-left: 3px solid var(--blue);
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin-top: 10px;
+    }
+
+    .callout p {
+      font-size: 13px;
+      color: var(--secondary);
+      line-height: 1.6;
+    }
+
+    .callout-warn {
+      background: var(--surface);
+      border: 1px solid #ff9f0a44;
+      border-left: 3px solid #ff9f0a;
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin-top: 10px;
+    }
+
+    .callout-warn p {
+      font-size: 13px;
+      color: var(--secondary);
+      line-height: 1.6;
+    }
+
+    .step-body ol {
+      margin-top: 10px;
+      margin-left: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .step-body ol li {
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--secondary);
+    }
+
+    .terminal {
+      display: block;
+      font-family: var(--mono);
+      font-size: 12px;
+      background: #000;
+      color: #30d158;
+      border: 1px solid var(--border2);
+      border-radius: 7px;
+      padding: 10px 14px;
+      margin-top: 10px;
+      letter-spacing: 0.2px;
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      width: 100%;
+      max-width: 680px;
+      padding: 32px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: auto;
+    }
+
+    footer p {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--secondary);
+      letter-spacing: 0.5px;
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <span class="nav-logo">Conductor</span>
+    <span class="nav-badge">BETA</span>
+  </nav>
+
+  <section class="hero">
+    <h1>Conductor</h1>
+    <p class="hero-tag">AI Assistant for Logic Pro</p>
+    <p class="hero-version">Beta v0.2.5</p>
+    <p>
+      Conductor sits quietly in the corner of your screen while you work.
+      Ask it anything — how a plugin works, why your mix sounds off, what
+      a setting does — and it answers with your exact session in view.
+    </p>
+    <a class="download-btn" href="https://github.com/geoffreykim566/conductor-logic-pro-v1/releases/download/v0.2.5/Conductor-0.2.5.dmg">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 16l-6-6h4V4h4v6h4l-6 6zm-7 2h14v2H5v-2z"/>
+      </svg>
+      Download for Mac
+    </a>
+    <p class="download-meta">macOS 12 or later</p>
+  </section>
+
+  <div class="divider"></div>
+
+  <section class="steps">
+    <p class="steps-title">⚠ IMPORTANT — READ THIS INSTALLATION GUIDE</p>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h3>Install the app</h3>
+        <p>
+          Open <span class="code">Conductor.dmg</span>, drag the app into your
+          Applications folder, then eject the disk image. Conductor is notarized
+          by Apple — double-click to open it normally. No workarounds needed.
+        </p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h3>Allow Screen Recording</h3>
+        <p>
+          On first launch, Conductor walks you through this automatically. Click
+          <strong style="color:#f2f2f7;">Grant Access</strong> and it will open
+          System Settings directly to the right page — toggle Conductor on under
+          <strong style="color:#f2f2f7;">Privacy &amp; Security → Screen Recording</strong>
+          and the app will detect it and move on by itself.
+        </p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h3>Start chatting for free</h3>
+        <p>
+          Your first 50 messages are free — no account, no setup required.
+        </p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h3>Open Logic Pro and start asking</h3>
+        <p>
+          That's it. Conductor floats over your session, automatically captures
+          what's on screen, and gives you precise answers based on exactly what
+          you're looking at. No copy-pasting, no switching windows.
+        </p>
+      </div>
+    </div>
+
+  </section>
+
+  <div class="divider"></div>
+
+  <section class="steps">
+    <p class="steps-title">Uninstalling</p>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h3>Remove app data from within Conductor</h3>
+        <p>
+          Click the <strong style="color:#f2f2f7;">⚙</strong> icon in the top-left of the Conductor window,
+          scroll to the bottom of Settings, and click
+          <strong style="color:#f2f2f7;">Uninstall Conductor</strong>.
+          Confirm when prompted — this deletes all chat history and config, then quits the app.
+        </p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h3>Drag the app to Trash</h3>
+        <p>
+          Open Finder → Applications, drag <strong style="color:#f2f2f7;">Conductor.app</strong> to the Trash, and empty it.
+          That's everything removed.
+        </p>
+      </div>
+    </div>
+
+  </section>
+
+  <footer>
+    <p>© 2026 Conductor &nbsp;·&nbsp; Beta v0.2.5</p>
+    <p>macOS only</p>
+  </footer>
+
+</body>
+</html>
