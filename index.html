@@ -251,6 +251,28 @@
       line-height: 1.6;
     }
 
+    .update-banner {
+      width: 100%;
+      max-width: 680px;
+      padding: 0 32px;
+      margin-top: -8px;
+    }
+
+    .update-banner-box {
+      background: var(--surface);
+      border: 1px solid #ff9f0a44;
+      border-left: 3px solid #ff9f0a;
+      border-radius: 8px;
+      padding: 14px 16px;
+      font-size: 13px;
+      color: var(--secondary);
+      line-height: 1.6;
+    }
+
+    .update-banner-box strong {
+      color: var(--label);
+    }
+
     .step-body ol {
       margin-top: 10px;
       margin-left: 18px;
@@ -307,16 +329,23 @@
     <span class="nav-badge">BETA</span>
   </nav>
 
+  <div class="update-banner">
+    <div class="update-banner-box">
+      <strong>Old versions before v0.2.6 have stopped working.</strong> Please download
+      the newest version!
+    </div>
+  </div>
+
   <section class="hero">
     <h1>Conductor</h1>
     <p class="hero-tag">AI Assistant for Logic Pro</p>
-    <p class="hero-version">Beta v0.2.5</p>
+    <p class="hero-version">Beta v0.2.6</p>
     <p>
       Conductor sits quietly in the corner of your screen while you work.
       Ask it anything — how a plugin works, why your mix sounds off, what
       a setting does — and it answers with your exact session in view.
     </p>
-    <a class="download-btn" href="https://github.com/geoffreykim566/conductor-logic-pro-v1/releases/download/v0.2.5/Conductor-0.2.5.dmg">
+    <a class="download-btn" href="https://github.com/geoffreykim566/conductor-logic-pro-v1/releases/download/v0.2.6/Conductor-0.2.6.dmg">
       <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
         <path d="M12 16l-6-6h4V4h4v6h4l-6 6zm-7 2h14v2H5v-2z"/>
       </svg>
@@ -328,7 +357,7 @@
   <div class="divider"></div>
 
   <section class="steps">
-    <p class="steps-title">⚠ IMPORTANT — READ THIS INSTALLATION GUIDE</p>
+    <p class="steps-title">INSTALLATION GUIDE</p>
 
     <div class="step">
       <div class="step-num">1</div>
@@ -336,8 +365,7 @@
         <h3>Install the app</h3>
         <p>
           Open <span class="code">Conductor.dmg</span>, drag the app into your
-          Applications folder, then eject the disk image. Conductor is notarized
-          by Apple — double-click to open it normally. No workarounds needed.
+          Applications folder, then eject the disk image.
         </p>
       </div>
     </div>
@@ -412,7 +440,7 @@
   </section>
 
   <footer>
-    <p>© 2026 Conductor &nbsp;·&nbsp; Beta v0.2.5</p>
+    <p>© 2026 Conductor &nbsp;·&nbsp; Beta v0.2.6</p>
     <p>macOS only</p>
   </footer>
 
