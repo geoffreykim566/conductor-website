@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en" data-variant="a">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Conductor — AI assistant for Logic Pro</title>
+  <meta name="description" content="Conductor is an AI assistant that works inside Logic Pro: ask about your session, and it sets plug-ins, runs the Mastering Assistant and splits stems for you." />
+  <meta name="color-scheme" content="dark" />
+  <link rel="preload" as="image" href="media/hero.webp" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* Near-black terminal. Purple only on actions. */
+    :root {
+      --bg:      #0a0a0b;
+      --surface: #121214;
+      --line:    #1f1f23;
+      --text:    #ededf0;
+      --muted:   #8a8a93;
+      --accent:  #a855c7;
+      --btn:     #9a45bb;   /* a touch darker than the accent so white text passes contrast */
+      --btn-h:   #a855c7;
+      --mono:    Menlo, ui-monospace, "SF Mono", Consolas, monospace;
+      color-scheme: dark;
+    }
+    html { background: var(--bg); scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 15px;
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: inherit; }
+
+    .wrap { width: 100%; max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+    /* ── LOGO SLOT ──
+       Placeholder mark. Swap each div for <img class="logo sm" src="logo.svg" alt="Conductor"> when it exists. */
+    .logo {
+      width: 44px; height: 44px;
+      border: 1px solid var(--accent);
+      border-radius: 11px;
+      display: grid; place-items: center;
+      flex-shrink: 0;
+    }
+    .logo::after {
+      content: "";
+      width: 12px; height: 12px;
+      border-radius: 3px;
+      background: var(--accent);
+    }
+    .logo.sm { width: 28px; height: 28px; border-radius: 8px; }
+    .logo.sm::after { width: 8px; height: 8px; border-radius: 2px; }
+
+    /* ── TOP BAR ── */
+    .top { padding-top: 24px; display: flex; align-items: center; }
+
+    /* ── HERO ── */
+    .hero {
+      padding-top: 64px;
+      display: flex; flex-direction: column; align-items: center;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: clamp(40px, 7vw, 64px);
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: -0.03em;
+    }
+
+    .tagline {
+      margin-top: 22px;
+      font-size: clamp(16px, 2.2vw, 19px);
+      color: var(--text);
+    }
+    .sub {
+      margin-top: 10px;
+      max-width: 560px;
+      color: var(--muted);
+    }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: var(--btn);
+      color: #fff;
+      font: 600 15px/1 var(--mono);
+      text-decoration: none;
+      padding: 15px 24px;
+      border-radius: 10px;
+      transition: background 0.15s ease, transform 0.15s ease;
+    }
+    .btn:hover { background: var(--btn-h); transform: translateY(-1px); }
+    .btn:focus-visible { outline: 2px solid var(--text); outline-offset: 3px; }
+    .btn svg { width: 16px; height: 16px; fill: currentColor; }
+
+    .hero .btn { margin-top: 36px; }
+    .meta { margin-top: 14px; font-size: 12px; color: var(--muted); }
+
+    /* ── VARIANT B: hero text over a full-width background video ──
+       The intro band (top bar + hero) holds the backdrop; a gradient over it keeps the text
+       readable and fades into the page. A's framed demo is hidden, so it never plays. */
+    .intro { position: relative; isolation: isolate; }
+    .backdrop { display: none; }
+    :is([data-variant="b"], [data-variant="c"]) .intro {
+      --muted: #b9b9c2;   /* brighter over video */
+      min-height: min(92vh, 900px);
+      display: flex; flex-direction: column;
+    }
+    :is([data-variant="b"], [data-variant="c"]) .intro::before {
+      content: "";
+      position: absolute; inset: 0; z-index: -1;
+      background: linear-gradient(180deg,
+        rgb(10 10 11 / 0.55) 0%, rgb(10 10 11 / 0.45) 45%, rgb(10 10 11 / 0.85) 85%, var(--bg) 100%);
+    }
+    :is([data-variant="b"], [data-variant="c"]) .backdrop { display: block; position: absolute; inset: 0; z-index: -2; overflow: hidden; }
+    :is([data-variant="b"], [data-variant="c"]) .backdrop video { width: 100%; height: 100%; object-fit: cover; display: block; }
+    :is([data-variant="b"], [data-variant="c"]) .hero { flex: 1; justify-content: center; padding-top: 0; padding-bottom: 96px; }
+    :is([data-variant="b"], [data-variant="c"]) .hero .frame { display: none; }
+    :is([data-variant="b"], [data-variant="c"]) .hero h1,
+    :is([data-variant="b"], [data-variant="c"]) .hero p { text-shadow: 0 1px 24px rgb(0 0 0 / 0.5); }
+    :is([data-variant="b"], [data-variant="c"]) .features { padding-top: 64px; }
+
+    /* ── VARIANT C: B with a shorter hero, sitting below the middle of the backdrop ── */
+    .only-c { display: none; }
+    [data-variant="c"] .only-c { display: inline; }
+    [data-variant="c"] .not-c { display: none; }
+    [data-variant="c"] .hero { justify-content: flex-end; padding-bottom: clamp(72px, 15vh, 170px); }
+    [data-variant="c"] .tagline { margin-top: 18px; }
+    [data-variant="c"] .hero .btn { margin-top: 32px; }
+
+    /* ── VIDEO FRAMES ── */
+    .frame { width: 100%; }
+    .frame video {
+      display: block;
+      width: 100%; height: auto;
+      aspect-ratio: 16 / 10;   /* reserves the space before the video loads: no layout jump */
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      object-fit: cover;
+    }
+    .hero .frame { margin-top: 64px; }
+
+    /* ── FEATURES ── */
+    .features { padding-top: 140px; padding-bottom: 40px; display: flex; flex-direction: column; gap: 140px; }
+
+    .feature {
+      display: grid;
+      grid-template-columns: 5fr 7fr;
+      gap: 56px;
+      align-items: center;
+    }
+    .feature:nth-child(even) { grid-template-columns: 7fr 5fr; }
+    .feature:nth-child(even) .copy { order: 2; }
+
+    .num { font-size: 12px; color: var(--accent); letter-spacing: 0.08em; }
+    .feature h2 {
+      margin-top: 10px;
+      font-size: clamp(22px, 3vw, 28px);
+      font-weight: 700;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+    }
+    .feature p { margin-top: 14px; color: var(--muted); }
+    .feature code { color: var(--text); }
+
+    /* ── FINAL CTA ── */
+    .final {
+      padding-top: 140px; padding-bottom: 120px;
+      display: flex; flex-direction: column; align-items: center;
+      text-align: center;
+    }
+    .final h2 { font-size: clamp(24px, 3.4vw, 32px); font-weight: 700; letter-spacing: -0.02em; }
+    .final p { margin-top: 10px; color: var(--muted); }
+    .final .btn { margin-top: 32px; }
+
+    footer {
+      border-top: 1px solid var(--line);
+      padding: 28px 0 40px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    footer .wrap { display: flex; justify-content: space-between; gap: 16px; }
+    footer a { color: inherit; text-decoration: none; }
+    footer a:hover { color: var(--text, #fff); }
+
+    /* ── SCROLL RISE-IN (only when JS runs; text stays visible, so a screenshot shows everything) ── */
+    .js .reveal { transform: translateY(14px); transition: transform 0.7s ease; }
+    .js .reveal.in { transform: none; }
+
+    /* ── PREVIEW ONLY: variant switch ── */
+    .variant-switch {
+      position: fixed; top: 16px; right: 16px; z-index: 20;
+      display: flex; gap: 4px; padding: 4px;
+      background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+    }
+    .variant-switch button {
+      font: 12px var(--mono); color: var(--muted);
+      background: none; border: 0; border-radius: 5px; padding: 4px 10px; cursor: pointer;
+    }
+    .variant-switch button[aria-pressed="true"] { background: var(--line); color: var(--text); }
+    .variant-switch button:focus-visible { outline: 2px solid var(--accent); }
+
+    @media (max-width: 760px) {
+      .hero { padding-top: 40px; }
+      :is([data-variant="b"], [data-variant="c"]) .intro { min-height: min(86vh, 760px); }
+      .hero .frame { margin-top: 44px; }
+      .features { padding-top: 96px; gap: 96px; }
+      .feature, .feature:nth-child(even) { grid-template-columns: 1fr; gap: 24px; }
+      .feature:nth-child(even) .copy { order: 0; }
+      .final { padding-top: 96px; padding-bottom: 88px; }
+      footer .wrap { flex-direction: column; gap: 4px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .js .reveal { transform: none; transition: none; }
+      .btn { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <script>document.documentElement.classList.add("js");</script>
+
+  <!-- PREVIEW ONLY: remove once a variant is picked -->
+  <div class="variant-switch" role="group" aria-label="Layout">
+    <button type="button" data-set-variant="a" aria-pressed="true">A</button>
+    <button type="button" data-set-variant="b" aria-pressed="false">B</button>
+    <button type="button" data-set-variant="c" aria-pressed="false">C</button>
+  </div>
+
+  <main>
+    <div class="intro">
+    <!-- Variant B/C background. data-lazy: nothing downloads while it's hidden (variant A). -->
+    <div class="backdrop" aria-hidden="true">
+      <video class="clip" data-lazy muted loop playsinline preload="none" poster="media/hero-bg.webp">
+        <source data-src="media/hero-bg.webm" type='video/webm; codecs="av01.0.08M.08"' />
+        <source data-src="media/hero-bg.mp4" type="video/mp4" />
+      </video>
+    </div>
+
+    <header class="top wrap">
+      <div class="logo sm" role="img" aria-label="Conductor"></div>
+    </header>
+
+    <section class="hero wrap">
+      <h1>Conductor</h1>
+      <p class="tagline"><span class="not-c">An AI assistant that works inside Logic Pro.</span><span class="only-c">An AI assistant for Logic Pro.</span></p>
+      <p class="sub not-c">Ask about your session in plain words. Conductor sees what you see, answers, and does the clicking for you.</p>
+      <a class="btn" id="hero-cta" href="https://github.com/geoffreykim566/conductor-website/releases/download/v0.4.2/Conductor-0.4.2.dmg">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16l-6-6h4V4h4v6h4l-6 6zm-7 2h14v2H5v-2z"/></svg>
+        <span class="not-c">Download for Mac</span><span class="only-c">Download v0.4.2</span>
+      </a>
+      <p class="meta"><span class="not-c">Beta v0.4.2 · macOS 12 or later · 50 free messages</span><span class="only-c">macOS 12 or later</span></p>
+
+      <div class="frame">
+        <!-- Above the fold: loads right away and autoplays. The poster shows instantly. -->
+        <video class="clip" autoplay muted loop playsinline preload="auto"
+               poster="media/hero.webp" width="1600" height="1000"
+               aria-label="Conductor answering a question inside Logic Pro">
+          <source src="media/hero.webm" type='video/webm; codecs="av01.0.08M.08"' />
+          <source src="media/hero.mp4" type="video/mp4" />
+        </video>
+      </div>
+    </section>
+    </div>
+
+    <section class="features wrap">
+      <!-- Below the fold: preload="none" and data-src, so nothing downloads until the clip
+           nears the screen. The script fills in src, and pauses any clip that scrolls off. -->
+      <article class="feature reveal">
+        <div class="copy">
+          <p class="num">01</p>
+          <h2>Ask about your session</h2>
+          <p>Conductor reads your screen and Logic's mixer, so "why does my vocal sound thin?" gets an answer about your track, not a generic one.</p>
+        </div>
+        <div class="frame">
+          <video class="clip" data-lazy muted loop playsinline preload="none"
+                 poster="media/ask.webp" width="1280" height="800"
+                 aria-label="Asking Conductor about a vocal track">
+            <source data-src="media/ask.webm" type='video/webm; codecs="av01.0.08M.08"' />
+            <source data-src="media/ask.mp4" type="video/mp4" />
+          </video>
+        </div>
+      </article>
+
+      <article class="feature reveal">
+        <div class="copy">
+          <p class="num">02</p>
+          <h2>Set plug-ins from chat</h2>
+          <p>Say <code>"pull the compressor threshold down 3 dB"</code>. Conductor shows the change as a card, runs it in Logic, and puts it back with one click if you don't like it.</p>
+        </div>
+        <div class="frame">
+          <video class="clip" data-lazy muted loop playsinline preload="none"
+                 poster="media/plugins.webp" width="1280" height="800"
+                 aria-label="Conductor setting a compressor's threshold">
+            <source data-src="media/plugins.webm" type='video/webm; codecs="av01.0.08M.08"' />
+            <source data-src="media/plugins.mp4" type="video/mp4" />
+          </video>
+        </div>
+      </article>
+
+      <article class="feature reveal">
+        <div class="copy">
+          <p class="num">03</p>
+          <h2>Master with Logic's Mastering Assistant</h2>
+          <p>Turn it on, read its settings and adjust loudness, width or EQ by asking. Conductor drives Logic's own mastering, not a black box.</p>
+        </div>
+        <div class="frame">
+          <video class="clip" data-lazy muted loop playsinline preload="none"
+                 poster="media/mastering.webp" width="1280" height="800"
+                 aria-label="Conductor adjusting the Mastering Assistant">
+            <source data-src="media/mastering.webm" type='video/webm; codecs="av01.0.08M.08"' />
+            <source data-src="media/mastering.mp4" type="video/mp4" />
+          </video>
+        </div>
+      </article>
+
+      <article class="feature reveal">
+        <div class="copy">
+          <p class="num">04</p>
+          <h2>Split stems in one ask</h2>
+          <p>Pull vocals, drums, bass and the rest out of a region with Logic's Stem Splitter. No extra plug-ins, no digging through menus.</p>
+        </div>
+        <div class="frame">
+          <video class="clip" data-lazy muted loop playsinline preload="none"
+                 poster="media/stems.webp" width="1280" height="800"
+                 aria-label="Conductor splitting a region into stems">
+            <source data-src="media/stems.webm" type='video/webm; codecs="av01.0.08M.08"' />
+            <source data-src="media/stems.mp4" type="video/mp4" />
+          </video>
+        </div>
+      </article>
+    </section>
+
+    <section class="final wrap reveal" id="final">
+      <h2>Free to start.</h2>
+      <p>50 messages, no account needed.</p>
+      <a class="btn" id="final-cta" href="https://github.com/geoffreykim566/conductor-website/releases/download/v0.4.2/Conductor-0.4.2.dmg">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16l-6-6h4V4h4v6h4l-6 6zm-7 2h14v2H5v-2z"/></svg>
+        Download for Mac
+      </a>
+      <p class="meta">Beta v0.4.2 · macOS 12 or later</p>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span>© 2026 Conductor · Not affiliated with Apple</span>
+      <span><a href="/privacy">Privacy</a> · <a href="mailto:hello@askconductor.ai">hello@askconductor.ai</a></span>
+    </div>
+  </footer>
+
+  <script>
+    (() => {
+      const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const saveData = navigator.connection && navigator.connection.saveData;
+      const clips = [...document.querySelectorAll("video.clip")];
+
+      const fillSources = (v) => {
+        if (v.dataset.filled) return;
+        v.querySelectorAll("source[data-src]").forEach((s) => { s.src = s.dataset.src; });
+        v.dataset.filled = "1";
+        v.load();
+      };
+
+      if (reduceMotion || saveData) {
+        // Posters only; the visitor can press play. Nothing downloads until they do.
+        clips.forEach((v) => {
+          v.removeAttribute("autoplay");
+          v.pause();
+          v.preload = "none";
+          fillSources(v);
+          v.controls = true;
+        });
+      } else {
+        // Start downloading a clip a screen before it arrives...
+        const near = new IntersectionObserver((entries) => {
+          entries.forEach((e) => {
+            if (e.isIntersecting) { fillSources(e.target); near.unobserve(e.target); }
+          });
+        }, { rootMargin: "100% 0px" });
+
+        // ...and only play the ones actually on screen, so at most two decode at once.
+        const visible = new IntersectionObserver((entries) => {
+          entries.forEach((e) => {
+            if (e.isIntersecting) e.target.play().catch(() => {});
+            else e.target.pause();
+          });
+        }, { threshold: 0.25 });
+
+        clips.forEach((v) => {
+          if (v.hasAttribute("data-lazy")) near.observe(v);
+          visible.observe(v);
+        });
+      }
+
+      // Fade sections in once.
+      const reveal = new IntersectionObserver((entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) { e.target.classList.add("in"); reveal.unobserve(e.target); }
+        });
+      }, { threshold: 0.15 });
+      document.querySelectorAll(".reveal").forEach((el) => reveal.observe(el));
+
+      // PREVIEW ONLY: variant switch (?v=b or ?v=c also works).
+      const root = document.documentElement;
+      const buttons = document.querySelectorAll("[data-set-variant]");
+      const setVariant = (v) => {
+        root.dataset.variant = v;
+        buttons.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.setVariant === v)));
+      };
+      buttons.forEach((b) => b.addEventListener("click", () => setVariant(b.dataset.setVariant)));
+      const fromUrl = new URLSearchParams(location.search).get("v");
+      if (["a", "b", "c"].includes(fromUrl)) setVariant(fromUrl);
+
+    })();
+  </script>
+</body>
+</html>
