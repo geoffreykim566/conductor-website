@@ -311,6 +311,8 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
       margin-top: auto;
     }
 
@@ -320,6 +322,9 @@
       color: var(--secondary);
       letter-spacing: 0.5px;
     }
+
+    footer a { color: var(--secondary); text-decoration: none; }
+    footer a:hover { color: var(--label); }
   </style>
 </head>
 <body>
@@ -440,8 +445,8 @@
   </section>
 
   <footer>
-    <p>© 2026 Conductor &nbsp;·&nbsp; Beta v0.4.2</p>
-    <p>macOS only</p>
+    <p>© 2026 Conductor &nbsp;·&nbsp; Beta v0.4.2 &nbsp;·&nbsp; Not affiliated with Apple</p>
+    <p><a href="/privacy">Privacy</a> &nbsp;·&nbsp; <a href="mailto:hello@askconductor.ai">hello@askconductor.ai</a></p>
   </footer>
 
 </body>

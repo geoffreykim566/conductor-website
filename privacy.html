@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy — Conductor</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #141415;
+      --border:   #2a2a2c;
+      --label:    #f2f2f7;
+      --secondary:#8e8e93;
+      --blue:     #0a84ff;
+      --blue-h:   #409cff;
+      --mono:     "Menlo", monospace;
+      --sans:     -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--label);
+      font-family: var(--sans);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    nav {
+      width: 100%;
+      max-width: 900px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 24px 32px;
+    }
+
+    .nav-logo {
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--secondary);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-decoration: none;
+    }
+
+    main {
+      width: 100%;
+      max-width: 680px;
+      padding: 48px 32px 64px;
+    }
+
+    h1 {
+      font-size: 40px;
+      font-weight: 700;
+      letter-spacing: -1px;
+      margin-bottom: 8px;
+    }
+
+    .updated {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--secondary);
+      letter-spacing: 0.5px;
+      margin-bottom: 40px;
+    }
+
+    h2 {
+      font-size: 20px;
+      font-weight: 600;
+      margin: 36px 0 12px;
+    }
+
+    p, li {
+      font-size: 16px;
+      line-height: 1.65;
+      color: var(--secondary);
+    }
+
+    p + p, ul + p { margin-top: 12px; }
+    ul { padding-left: 20px; margin-top: 8px; }
+    li + li { margin-top: 4px; }
+    strong { color: var(--label); font-weight: 600; }
+    code { overflow-wrap: anywhere; }
+
+    a { color: var(--blue); text-decoration: none; }
+    a:hover { color: var(--blue-h); }
+
+    footer {
+      width: 100%;
+      max-width: 680px;
+      padding: 32px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-top: auto;
+    }
+
+    footer p {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--secondary);
+      letter-spacing: 0.5px;
+    }
+
+    footer a { color: var(--secondary); }
+    footer a:hover { color: var(--label); }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a class="nav-logo" href="/">Conductor</a>
+  </nav>
+
+  <main>
+    <h1>Privacy</h1>
+    <p class="updated">Last updated October 27, 2026</p>
+
+    <p>Conductor is an AI assistant for Logic Pro, in beta. This page explains what the app sends, what we keep, and how to have it deleted. Questions go to <a href="mailto:hello@askconductor.ai">hello@askconductor.ai</a>.</p>
+
+    <h2>What the app sends</h2>
+    <p>When you send a message, Conductor sends our server:</p>
+    <ul>
+      <li><strong>Your message</strong> and the conversation so far.</li>
+      <li><strong>Screenshots of Logic Pro's windows.</strong> Only windows that belong to Logic, never the rest of your screen.</li>
+      <li><strong>Logic's layout state:</strong> the text and controls macOS Accessibility reports for Logic's windows, such as track names, plug-in names and their settings.</li>
+    </ul>
+    <p>The app also sends basic usage: message counts, thumbs up or down on replies, the app version, your optional answers to the setup questions, and when you install or uninstall. To count one Mac as one user, it sends a one-way hash of your Mac's hardware ID, never the ID itself.</p>
+
+    <h2>Bug reports and feedback</h2>
+    <p>A bug report you send from the app includes the chat, the app's log of the actions it ran, Logic's window state, and your Logic and Conductor versions. Feedback includes only what you write, unless you tick "Include the chat and logs". Reports never include a screenshot.</p>
+
+    <h2>What we keep</h2>
+    <ul>
+      <li><strong>Screenshots are never stored.</strong> They're used to answer that message, then discarded.</li>
+      <li>We keep your messages, Conductor's replies, usage and reports.</li>
+      <li>We keep it until you ask us to delete it.</li>
+    </ul>
+
+    <h2>How it's used</h2>
+    <p>Only to answer you and to improve Conductor, for example finding where it gave a wrong answer. <strong>Your data is never used to train AI models</strong>, by us or anyone else. We don't sell it or share it for advertising.</p>
+
+    <h2>Who else handles it</h2>
+    <ul>
+      <li><strong>OpenAI</strong> generates Conductor's answers and runs its web research. It receives what's needed to answer each message, including the screenshots. Under OpenAI's API terms it doesn't train on this data and deletes it within 30 days. See <a href="https://openai.com/enterprise-privacy/">OpenAI's API data policy</a>.</li>
+      <li><strong>Railway</strong> hosts our server and database.</li>
+    </ul>
+    <p>Like any server, ours sees your IP address when the app connects.</p>
+
+    <h2>What stays on your Mac</h2>
+    <p>Your chat history and settings are saved on your Mac in <code>~/Library/Application Support/Conductor-v3/</code>. Settings → Delete Chat History clears the history, and Settings → Uninstall Conductor deletes the whole folder. Uninstalling doesn't delete what's on our server: for that, email us.</p>
+
+    <h2>Deleting your data</h2>
+    <p>Email <a href="mailto:hello@askconductor.ai">hello@askconductor.ai</a> from any address and say you'd like your data deleted. We'll delete it from our server within 30 days and confirm by email. You can also ask for a copy of what we have.</p>
+
+    <h2>This website</h2>
+    <p>askconductor.ai uses no cookies or analytics.</p>
+
+    <h2>Children</h2>
+    <p>Conductor isn't meant for children under 13, and we don't knowingly collect their data.</p>
+
+    <h2>Changes</h2>
+    <p>If this policy changes what the app sends or how it's used, we'll update this page and the app will ask you to agree again.</p>
+  </main>
+
+  <footer>
+    <p>© 2026 Conductor &nbsp;·&nbsp; Not affiliated with Apple. Logic Pro is a trademark of Apple Inc.</p>
+    <p><a href="/">Home</a> &nbsp;·&nbsp; <a href="mailto:hello@askconductor.ai">hello@askconductor.ai</a></p>
+  </footer>
+
+</body>
+</html>
