@@ -39,10 +39,21 @@ UI text is still sharp after encoding (lower `CRF` / `AV1_CRF` if not). Aim for 
   format it can't decode without downloading it (older Macs and iPhones lack AV1 hardware).
 - **Reduced motion or Save-Data shows posters with play controls** and downloads nothing.
 - **No GIFs:** a GIF is several times bigger than the same clip as video and can't be paused.
-- **Download links appear twice** (hero, final block), plus `Beta vX.Y.Z`
-  twice. The `release-client` skill's sed must replace all of them.
+- **The landing page has no download link** (`preview.html`, waitlist since 2026-10-31). Its two
+  forms post to the server's `/v3/waitlist` (`api.askconductor.ai`, or `127.0.0.1:8000` when
+  the page is served locally). The server answers the same for a new or repeat email, so the page
+  never shows who's on the list. A hidden `company` field is a honeypot. `source` is the URL's
+  `utm_source`, else the referrer's host: link socials as `?utm_source=instagram` etc.
+- **`download.html` is the only download link.** It's served at `/download`, linked only from
+  the invite email, and marked noindex. A shared link gets nobody in: the app asks for an
+  approved email. Its `Beta vX.Y.Z` and DMG href are what the `release-client` skill's sed must
+  change once this page ships.
 
 ## Privacy page
+
+The "The waitlist" section covers the signup email (kept apart from usage, Resend sends the
+invite). Keep it in step with the server's waitlist (`server/app/api/README.md`).
+
 
 `privacy.html` is served at `/privacy` (Cloudflare drops the `.html`). The client's setup
 disclaimer and Settings link to it (`config.PRIVACY_URL` in the client). Keep it in step with

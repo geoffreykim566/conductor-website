@@ -99,6 +99,26 @@
     .btn svg { width: 16px; height: 16px; fill: currentColor; }
 
     .hero .btn { margin-top: 36px; }
+
+    /* ── WAITLIST FORM (posts to the server's /v3/waitlist) ── */
+    .join { margin-top: 36px; display: flex; gap: 8px; width: 100%; max-width: 460px; }
+    .join input[type="email"] {
+      flex: 1; min-width: 0;
+      background: var(--surface); color: var(--text);
+      border: 1px solid var(--line); border-radius: 10px;
+      font: 15px/1 var(--mono); padding: 14px 16px;
+    }
+    .join input[type="email"]::placeholder { color: var(--muted); }
+    .join input[type="email"]:focus { outline: none; border-color: var(--accent); }
+    /* !important: the hero/final/variant-C .btn margin rules are meant for a bare button. */
+    .join .btn { border: 0; cursor: pointer; white-space: nowrap; margin-top: 0 !important; justify-content: center; }
+    .join .btn:disabled { opacity: 0.6; cursor: default; transform: none; }
+    .join .hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+    .join-msg { margin-top: 14px; font-size: 13px; color: var(--text); }
+    .join-msg.err { color: #ef8a8a; }
+    .join-msg:empty { display: none; }
+    .join.done { display: none; }
+    @media (max-width: 560px) { .join { flex-direction: column; } }
     .meta { margin-top: 14px; font-size: 12px; color: var(--muted); }
 
     /* ── VARIANT B: hero text over a full-width background video ──
@@ -252,11 +272,13 @@
       <h1>Conductor</h1>
       <p class="tagline"><span class="not-c">An AI assistant that works inside Logic Pro.</span><span class="only-c">An AI assistant for Logic Pro.</span></p>
       <p class="sub not-c">Ask about your session in plain words. Conductor sees what you see, answers, and does the clicking for you.</p>
-      <a class="btn" id="hero-cta" href="https://github.com/geoffreykim566/conductor-website/releases/download/v0.4.2/Conductor-0.4.2.dmg">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16l-6-6h4V4h4v6h4l-6 6zm-7 2h14v2H5v-2z"/></svg>
-        <span class="not-c">Download for Mac</span><span class="only-c">Download v0.4.2</span>
-      </a>
-      <p class="meta"><span class="not-c">Beta v0.4.2 · macOS 12 or later · 100 free messages</span><span class="only-c">macOS 12 or later</span></p>
+      <form class="join" id="hero-join" novalidate>
+        <input type="email" name="email" placeholder="you@example.com" autocomplete="email" aria-label="Email" required />
+        <input class="hp" type="text" name="company" tabindex="-1" autocomplete="off" aria-hidden="true" />
+        <button class="btn" type="submit">Join the waitlist</button>
+      </form>
+      <p class="join-msg" role="status" aria-live="polite"></p>
+      <p class="meta"><span class="not-c">Beta · macOS 12 or later · 100 free messages</span><span class="only-c">macOS 12 or later</span></p>
 
       <div class="frame">
         <!-- Above the fold: loads right away and autoplays. The poster shows instantly. -->
@@ -340,12 +362,14 @@
 
     <section class="final wrap reveal" id="final">
       <h2>Free to start.</h2>
-      <p>100 messages, no account needed.</p>
-      <a class="btn" id="final-cta" href="https://github.com/geoffreykim566/conductor-website/releases/download/v0.4.2/Conductor-0.4.2.dmg">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16l-6-6h4V4h4v6h4l-6 6zm-7 2h14v2H5v-2z"/></svg>
-        Download for Mac
-      </a>
-      <p class="meta">Beta v0.4.2 · macOS 12 or later</p>
+      <p>Join the waitlist. 100 free messages once you're in.</p>
+      <form class="join" id="final-join" novalidate>
+        <input type="email" name="email" placeholder="you@example.com" autocomplete="email" aria-label="Email" required />
+        <input class="hp" type="text" name="company" tabindex="-1" autocomplete="off" aria-hidden="true" />
+        <button class="btn" type="submit">Join the waitlist</button>
+      </form>
+      <p class="join-msg" role="status" aria-live="polite"></p>
+      <p class="meta">Beta · macOS 12 or later</p>
     </section>
   </main>
 
@@ -357,6 +381,56 @@
   </footer>
 
   <script>
+    // Waitlist signup. Same answer for a new or repeat email; the server never says who's on the list.
+    (() => {
+      const local = ["127.0.0.1", "localhost"].includes(location.hostname);
+      const API = local ? "http://127.0.0.1:8000" : "https://api.askconductor.ai";
+      const params = new URLSearchParams(location.search);
+      let source = params.get("utm_source") || "";
+      try {
+        const ref = document.referrer && new URL(document.referrer).hostname;
+        if (!source && ref && ref !== location.hostname) source = ref.replace(/^www\./, "");
+      } catch (_) {}
+
+      const done = (form) => {
+        document.querySelectorAll("form.join").forEach((f) => {
+          f.classList.add("done");
+          f.nextElementSibling.textContent = "You're on the list. We'll email you when you're in.";
+          f.nextElementSibling.classList.remove("err");
+        });
+      };
+
+      document.querySelectorAll("form.join").forEach((form) => {
+        const msg = form.nextElementSibling;
+        const btn = form.querySelector("button");
+        form.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const email = form.email.value.trim();
+          if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+            msg.textContent = "Enter a valid email address.";
+            msg.classList.add("err");
+            return;
+          }
+          btn.disabled = true;
+          msg.textContent = "";
+          try {
+            const r = await fetch(API + "/v3/waitlist", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email, source: source.slice(0, 100) || null, company: form.company.value }),
+            });
+            if (r.ok) return done(form);
+            msg.textContent = r.status === 429 ? "Too many tries. Try again in a bit."
+              : r.status === 422 ? "Enter a valid email address." : "Something went wrong. Try again.";
+          } catch (_) {
+            msg.textContent = "Couldn't reach the server. Check your connection and try again.";
+          }
+          msg.classList.add("err");
+          btn.disabled = false;
+        });
+      });
+    })();
+
     (() => {
       const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
       const saveData = navigator.connection && navigator.connection.saveData;

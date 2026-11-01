@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Download Conductor</title>
+  <!-- Linked only from the invite email. The app checks the email, so a shared link gets nobody in. -->
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="color-scheme" content="dark" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:      #0a0a0b;
+      --line:    #1f1f23;
+      --text:    #ededf0;
+      --muted:   #8a8a93;
+      --accent:  #a855c7;
+      --btn:     #9a45bb;
+      --btn-h:   #a855c7;
+      --mono:    Menlo, ui-monospace, "SF Mono", Consolas, monospace;
+      color-scheme: dark;
+    }
+    html { background: var(--bg); }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: var(--mono); font-size: 15px; line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh; display: flex; flex-direction: column;
+    }
+    a { color: inherit; }
+    .wrap { width: 100%; max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+    /* Placeholder mark, as on the landing page; swap for logo.svg with it. */
+    .logo {
+      width: 28px; height: 28px; border: 1px solid var(--accent); border-radius: 8px;
+      display: grid; place-items: center;
+    }
+    .logo::after { content: ""; width: 8px; height: 8px; border-radius: 2px; background: var(--accent); }
+    .top { padding-top: 24px; display: flex; align-items: center; }
+
+    main {
+      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; padding-top: 48px; padding-bottom: 96px;
+    }
+    h1 { font-size: clamp(36px, 6vw, 56px); font-weight: 700; line-height: 1.05; letter-spacing: -0.03em; }
+    .sub { margin-top: 18px; max-width: 520px; color: var(--muted); }
+    .btn {
+      margin-top: 36px;
+      display: inline-flex; align-items: center; gap: 10px;
+      background: var(--btn); color: #fff;
+      font: 600 15px/1 var(--mono); text-decoration: none;
+      padding: 15px 24px; border-radius: 10px;
+      transition: background 0.15s ease, transform 0.15s ease;
+    }
+    .btn:hover { background: var(--btn-h); transform: translateY(-1px); }
+    .btn:focus-visible { outline: 2px solid var(--text); outline-offset: 3px; }
+    .btn svg { width: 16px; height: 16px; fill: currentColor; }
+    .meta { margin-top: 14px; font-size: 12px; color: var(--muted); }
+    .steps { margin-top: 48px; color: var(--muted); font-size: 13px; text-align: left; list-style: none; counter-reset: s; }
+    .steps li { counter-increment: s; margin-top: 6px; }
+    .steps li::before { content: counter(s) ". "; color: var(--accent); }
+
+    footer { border-top: 1px solid var(--line); padding: 28px 0 40px; font-size: 12px; color: var(--muted); }
+    footer .wrap { display: flex; justify-content: space-between; gap: 16px; }
+    footer a { text-decoration: none; }
+    footer a:hover { color: var(--text); }
+    @media (max-width: 760px) { footer .wrap { flex-direction: column; gap: 4px; } }
+    @media (prefers-reduced-motion: reduce) { .btn { transition: none; } }
+  </style>
+</head>
+<body>
+  <header class="top wrap">
+    <a href="/" class="logo" aria-label="Conductor"></a>
+  </header>
+
+  <main class="wrap">
+    <h1>You're in.</h1>
+    <p class="sub">Thanks for waiting. Download Conductor, then enter the email you signed up with when it opens.</p>
+    <a class="btn" id="download-cta" href="https://github.com/geoffreykim566/conductor-website/releases/download/v0.4.3/Conductor-0.4.3.dmg">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16l-6-6h4V4h4v6h4l-6 6zm-7 2h14v2H5v-2z"/></svg>
+      Download for Mac
+    </a>
+    <p class="meta">Beta v0.4.3 · macOS 12 or later · 100 free messages</p>
+    <ol class="steps">
+      <li>Open the DMG and drag Conductor into Applications.</li>
+      <li>Open Conductor and enter your waitlist email.</li>
+      <li>Grant the two permissions it asks for, then open Logic Pro.</li>
+    </ol>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span>© 2026 Conductor · Not affiliated with Apple</span>
+      <span><a href="/privacy">Privacy</a> · <a href="mailto:hello@askconductor.ai">hello@askconductor.ai</a></span>
+    </div>
+  </footer>
+</body>
+</html>
