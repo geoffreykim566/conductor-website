@@ -60,7 +60,7 @@ UI text is still sharp after encoding (lower `CRF` / `AV1_CRF` if not). Aim for 
 ## Visit counting
 
 `visit.js` (loaded by every page) posts one beacon per page view to the server's `/v3/visit`,
-which feeds the admin Funnel tab (`server/app/api/README.md`, Funnel). No cookies, no third party.
+which feeds the admin Website tab (`server/app/api/README.md`, Funnel). No cookies, no third party.
 
 - **Short links:** `/ig` `/tt` `/yt` `/x` `/th` `/fb` `/rd` `/dc` redirect to `/?utm_source=<tag>`
   (`_redirects`, 302). Put these in bios and posts: the tag is the only source that survives
