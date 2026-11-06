@@ -45,10 +45,27 @@ UI text is still sharp after encoding (lower `CRF` / `AV1_CRF` if not). Aim for 
   the page is served locally). The server answers the same for a new or repeat email, so the page
   never shows who's on the list. A hidden `company` field is a honeypot. `source` is the URL's
   `utm_source`, else the referrer's host: link socials as `?utm_source=instagram` etc.
+- **The visit beacon waits for a look** (~2 s visible, or a scroll, tap or key), so link-preview
+  fetchers and tabs opened in the background and never viewed aren't counted. It sends
+  `text/plain` so the cross-origin POST needs no CORS preflight. The visitor id is in local
+  storage (one per browser, so "unique" is an upper bound); the visit id is per tab and renews
+  after 30 minutes idle. Bots are dropped on the server, by user agent and `navigator.webdriver`.
+- **`_redirects` works on Workers static assets** (checked with `wrangler dev` 11-06: `/ig` → 302,
+  the file itself isn't served).
 - **`download.html` is the only download link.** It's served at `/download`, linked only from
   the invite email, and marked noindex. A shared link gets nobody in: the app asks for an
   approved email. Its `Beta vX.Y.Z` and DMG href are what the `release-client` skill's sed changes.
   The client's update popup opens it too (`DOWNLOAD_URL`).
+
+## Visit counting
+
+`visit.js` (loaded by every page) posts one beacon per page view to the server's `/v3/visit`,
+which feeds the admin Funnel tab (`server/app/api/README.md`, Funnel). No cookies, no third party.
+
+- **Short links:** `/ig` `/tt` `/yt` `/x` `/th` `/fb` `/rd` `/dc` redirect to `/?utm_source=<tag>`
+  (`_redirects`, 302). Put these in bios and posts: the tag is the only source that survives
+  in-app browsers. A new platform is a line here plus its tag in `server/app/core/channel.py`.
+- **Our own visits:** open `askconductor.ai/?notrack` once in each browser you use; `?track` undoes it.
 
 ## Privacy page
 
@@ -61,6 +78,6 @@ disclaimer and Settings link to it (`config.PRIVACY_URL` in the client). Keep it
 the disclaimer and with what the app and server actually collect: a change to either side
 means updating both, and if it changes what users agree to, bumping the client's
 `DISCLAIMER_VERSION`. It names OpenAI and its 30-day API retention; the disclaimer only says
-"our server" (user call 2026-10-27). "No cookies or analytics" stops being true once visit
-metrics land; update that line with them. The footer on every page links Privacy and
+"our server" (user call 2026-10-27). "This website" describes the visit beacon: keep it in step
+with `visit.js` and the server's `visits` table. The footer on every page links Privacy and
 hello@askconductor.ai (an iCloud+ custom-domain address).

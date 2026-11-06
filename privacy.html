@@ -132,13 +132,13 @@
       <li><strong>Screenshots of Logic Pro's windows.</strong> Only windows that belong to Logic, never the rest of your screen.</li>
       <li><strong>Logic's layout state:</strong> the text and controls macOS Accessibility reports for Logic's windows, such as track names, plug-in names and their settings.</li>
     </ul>
-    <p>The app also sends basic usage: message counts, thumbs up or down on replies, the app version, your optional answers to the setup questions, and when you install or uninstall. To count one Mac as one user, it sends a one-way hash of your Mac's hardware ID, never the ID itself.</p>
+    <p>The app also sends basic usage: message counts, thumbs up or down on replies, the app version, your optional answers to the setup questions, and when you install or uninstall. To count one Mac as one user, it sends a one-way hash of your Mac's hardware ID, never the ID itself. When the app is first set up, we note which country it's in (from its IP address) and where you heard about Conductor (below).</p>
 
     <h2>Bug reports and feedback</h2>
     <p>A bug report you send from the app includes the chat, the app's log of the actions it ran, Logic's window state, and your Logic and Conductor versions. Feedback includes only what you write, unless you tick "Include the chat and logs". Reports never include a screenshot.</p>
 
     <h2>The waitlist</h2>
-    <p>When you join the waitlist, we keep your email address, when you signed up, and the site that sent you here, if there was one. We use it to let you in, email you the download link, and check it when you set up the app (it works on up to two Macs). It's stored apart from your messages and usage, and isn't linked to them. We keep it while you're on the waitlist or using Conductor, and delete it sooner if you ask. We never email you anything else without asking.</p>
+    <p>When you join the waitlist, we keep your email address, when you signed up, your country, and the site or app that sent you here, if there was one. We use it to let you in, email you the download link, and check it when you set up the app (it works on up to two Macs). It's stored apart from your messages and usage, and isn't linked to them: the only thing copied to your usage is where you came from (for example "instagram"), so we can see which places bring people who use Conductor. We keep it while you're on the waitlist or using Conductor, and delete it sooner if you ask. We never email you anything else without asking.</p>
 
     <h2>What we keep</h2>
     <ul>
@@ -156,7 +156,7 @@
       <li><strong>Railway</strong> hosts our server and database.</li>
       <li><strong>Resend</strong> sends the email that lets you in from the waitlist. It receives your email address.</li>
     </ul>
-    <p>Like any server, ours sees your IP address when the app connects.</p>
+    <p>Like any server, ours sees your IP address when the app or this website connects. We use it only to look up your country, with a database on our own server (<a href="https://db-ip.com">IP Geolocation by DB-IP</a>), and don't store the address.</p>
 
     <h2>What stays on your Mac</h2>
     <p>Your chat history and settings are saved on your Mac in <code>~/Library/Application Support/Conductor/</code>. Settings → Delete Chat History clears the history, and Settings → Uninstall Conductor deletes the whole folder. Uninstalling doesn't delete what's on our server: for that, email us.</p>
@@ -165,7 +165,7 @@
     <p>Email <a href="mailto:hello@askconductor.ai">hello@askconductor.ai</a> from any address and say you'd like your data deleted. We'll delete it from our server within 30 days and confirm by email. You can also ask for a copy of what we have.</p>
 
     <h2>This website</h2>
-    <p>askconductor.ai uses no cookies or analytics.</p>
+    <p>askconductor.ai uses no cookies and no third-party analytics. To count visits, each page you view sends our server the page, the link's campaign tag (like <code>?utm_source=instagram</code>), the site that linked you here, your browser type and your country. Your browser keeps a random ID in its local storage so a return visit isn't counted as a new visitor. It isn't tied to your email, your Mac or anything else, and clearing your browser's site data removes it. Visit records are deleted after 12 months.</p>
 
     <h2>Children</h2>
     <p>Conductor isn't meant for children under 13, and we don't knowingly collect their data.</p>
@@ -179,5 +179,6 @@
     <p><a href="/">Home</a> &nbsp;·&nbsp; <a href="mailto:hello@askconductor.ai">hello@askconductor.ai</a></p>
   </footer>
 
+  <script src="/visit.js" defer></script>
 </body>
 </html>
