@@ -15,31 +15,32 @@ python3 -m http.server 8765 --bind 127.0.0.1
 Then open http://127.0.0.1:8765/ (or `/privacy.html`, `/download.html`; the download page starts
 the DMG download on arrival).
 
-The landing page is `index.html` (from the `landing-v2` draft, shipped with v0.4.4): hero over
-the backdrop with the waitlist form, four features as a text-only 2×2 grid, a closing form.
-The backdrop `media/hero-bg.*` is still the placeholder gradient.
+The landing page is `index.html`: one Logic window pinned to the screen. A scroll grows it and
+blurs it, Conductor's panel comes out of the corner, and three stops step through (Ask anything,
+Your session your call, You create), by scroll, the dots, the arrow keys or a sideways swipe.
+Each stop plays its demo in a loop. Waitlist forms in the top bar and the closing section.
 
-## Videos
+## Media
 
-The backdrop is the only video now. Each clip is three files in `media/`: `<name>.webm` (AV1), `<name>.mp4` (H.264 fallback) and
-`<name>.webp` (poster, the first frame). Make them from a screen recording with:
+`media/scene/*.webp` are per-window captures from a live run on Logic Pro 13 (11-09):
+`logic-clean` is the main window behind every stop, the rest are plug-in windows
+(`eq-before`/`eq-after`, `compressor`, `verb`, `mastering`) and the Drums stem strip
+(`logic-stems`). Scene coordinates in the page are the base capture's own 1920×960 pixels, so a
+replacement capture must keep that size or the windows land in the wrong place.
 
-```
-tools/encode-video.sh ~/Desktop/recording.mov hero-bg     # 1600 wide
-```
-
-Record at 16:10 (a Mac screen or window), keep it 6–12 s with a clean loop, and check the
-UI text is still sharp after encoding (lower `CRF` / `AV1_CRF` if not). Aim for 1–3 MB a clip.
+`tools/encode-video.sh` is still there for clips (AV1 `.webm`, H.264 `.mp4`, `.webp` poster,
+1600 wide); the page has none today.
 
 ## Quirks & why
 
-- **Features are text only (v0.4.4):** there were no real recordings yet, so the clip slots were
-  dropped (user call). If clips come back, load them lazily (`preload="none"`, `src` filled in a
-  screen early, paused off screen) so only the backdrop loads up front.
-- **AV1 first, MP4 second.** The `codecs` in each `<source type>` let the browser skip a
-  format it can't decode without downloading it (older Macs and iPhones lack AV1 hardware).
-- **Reduced motion or Save-Data shows the backdrop's poster** and plays nothing.
-- **No GIFs:** a GIF is several times bigger than the same clip as video and can't be paused.
+- **The Conductor panel is HTML, not a screenshot**, rebuilt from the app's theme tokens, so it
+  stays sharp at any zoom. Replies and cards are the app's real text from the 11-09 run, trimmed
+  to the app's own sentences (user call). Glossary underlines match `seed/glossary.json`.
+- **Mouse and trackpad page one stop per gesture** (JS); touch uses CSS scroll snap. Momentum
+  after a swipe is ignored until the movement rises again or changes direction.
+- **Reduced motion** turns off transitions and the loops' delays.
+- **Light (A) / dark (B) look** switch in the top bar; `?v=b` opens dark, the pick is kept per
+  browser in local storage.
 - **The landing page has no download link** (`index.html`, waitlist since v0.4.4). Its two
   forms post to the server's `/v3/waitlist` (`api.askconductor.ai`, or `127.0.0.1:8000` when
   the page is served locally). The server answers the same for a new or repeat email, so the page

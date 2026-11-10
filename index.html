@@ -2,335 +2,1045 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Conductor — AI assistant for Logic Pro</title>
-  <meta name="description" content="Conductor is an AI assistant that works inside Logic Pro: ask about your session, and it sets plug-ins, runs the Mastering Assistant and splits stems for you." />
-  <meta name="color-scheme" content="dark" />
-  <link rel="preload" as="image" href="media/hero-bg.webp" />
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  <meta name="description" content="Ask anything about Logic Pro, and let Conductor handle the setup. Join the waitlist." />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Conductor" />
+  <meta property="og:title" content="Conductor" />
+  <meta property="og:description" content="Ask anything about Logic Pro, and let Conductor handle the setup. Join the waitlist." />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Conductor" />
+  <meta name="twitter:description" content="Ask anything about Logic Pro, and let Conductor handle the setup. Join the waitlist." />
+  <link rel="preload" as="image" href="media/scene/logic-clean.webp" />
+<style>
+/* Layout: one Logic window pinned to the screen. Scrolling grows it, lifts Conductor out of the
+   corner, then steps through features on the same scene; each feature brings up only the window
+   it needs and blurs the rest. Scene coordinates are the screenshot's own 1920x960 pixels. */
+:root {
+  --sky-top: #F2EFE9;
+  --sky-mid: #F2EFE9;
+  --sky-low: #F2EFE9;
+  --ink: #16101E;
+  --ink-soft: rgba(22, 16, 30, 0.64);
+  --glass: rgba(120, 118, 150, 0.34);
+  --glass-line: rgba(22, 16, 30, 0.12);
+  --run: #7B2CBF;
+  --panel: #141416;
+  --panel-raised: #232325;
+  --panel-text: #f2f2f7;
+  --panel-dim: #8e8e93;
+  --title-a: #16101E; --title-b: #16101E; --title-c: #16101E;
+  --title-shadow: 0 0 0 transparent;
+  --field: rgba(22, 16, 30, 0.05);
+  --field-hint: rgba(22, 16, 30, 0.5);
+  --field-focus: #7B2CBF;
+  --btn: #5B1A8C;
+  --btn-hover: #6E22A8;
+  --btn-ink: #ffffff;
+  --shade: #E8E3DA;
+  --veil: rgba(255, 255, 255, 0.12);
+  --dots-bg: rgba(20, 16, 60, 0.55);
+  --dot-cur: rgba(255, 255, 255, 0.18);
+  --err: #c0262d;
+  --bubble-ink: #ffffff;
+  --bubble-ink-soft: rgba(255, 255, 255, 0.8);
+  --bubble-line: rgba(255, 255, 255, 0.16);
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color-scheme: light;
+}
+/* Look B: black page, same purple accents as A. */
+:root[data-look="b"] {
+  --sky-top: #0A0A0C; --sky-mid: #0A0A0C; --sky-low: #0A0A0C;
+  --ink: #ffffff;
+  --ink-soft: rgba(255, 255, 255, 0.68);
+  --glass-line: rgba(255, 255, 255, 0.14);
+  --title-a: #ffffff; --title-b: #ffffff; --title-c: #ffffff;
+  --field: rgba(255, 255, 255, 0.08);
+  --field-hint: rgba(255, 255, 255, 0.5);
+  --shade: #000000;
+  --veil: rgba(0, 0, 0, 0.2);
+  --err: #ffd2d2;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+@media (hover: none) { html { scroll-snap-type: y mandatory; } } /* touch; mouse and trackpad page in JS */
+html, body { margin: 0; }
+/* page gradient on its own fixed layer: Safari repaints the whole page every frame with background-attachment: fixed */
+body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 48%, var(--sky-low) 100%); }
+body {
+  background: var(--sky-mid);
+  color: var(--ink);
+  font-family: var(--sans);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
 
-    /* Near-black terminal. Purple only on actions. */
-    :root {
-      --bg:      #0a0a0b;
-      --surface: #121214;
-      --line:    #1f1f23;
-      --text:    #ededf0;
-      --muted:   #8a8a93;
-      --accent:  #a855c7;
-      --btn:     #9a45bb;   /* a touch darker than the accent so white text passes contrast */
-      --btn-h:   #a855c7;
-      --mono:    Menlo, ui-monospace, "SF Mono", Consolas, monospace;
-      color-scheme: dark;
-    }
-    html { background: var(--bg); scroll-behavior: smooth; }
+/* ── top bar ── */
+.topbar {
+  position: fixed; inset: 0 0 auto; z-index: 30;
+  display: flex; align-items: center; gap: 20px;
+  height: 76px;
+  padding-left: max(28px, env(safe-area-inset-left, 0px));
+  padding-right: max(28px, env(safe-area-inset-right, 0px));
+}
+.wordmark { font-weight: 600; font-size: 17px; letter-spacing: -0.01em; white-space: nowrap; }
+.topbar form.join { flex: 1; display: flex; gap: 12px; align-items: center; justify-content: flex-end; min-width: 0; }
+.topbar .field { display: none; }
+.join input[type=email] {
+  width: 100%; height: 42px; padding: 0 18px;
+  border-radius: 12px; border: 1px solid var(--glass-line);
+  background: var(--field); color: var(--ink);
+  font: 15px var(--sans); outline: none;
+}
+.join input[type=email]::placeholder { color: var(--field-hint); }
+.join input[type=email]:focus-visible { border-color: var(--field-focus); }
+.join .btn {
+  height: 42px; padding: 0 20px; border-radius: 12px;
+  border: 1px solid var(--glass-line); background: var(--btn);
+  color: var(--btn-ink); font: 600 15px var(--sans); cursor: pointer; white-space: nowrap;
+}
+.join .btn:hover { background: var(--btn-hover); }
+.join .btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.join.done input, .join.done .btn { opacity: 0.5; pointer-events: none; }
+.look { display: flex; flex: none; padding: 3px; gap: 2px; border-radius: 10px; border: 1px solid var(--glass-line); background: var(--field); }
+.look button { width: 30px; height: 30px; border: 0; border-radius: 7px; background: transparent; color: var(--ink-soft); font: 600 13px var(--sans); cursor: pointer; }
+.look button[aria-pressed="true"] { background: var(--ink); color: var(--sky-top); }
+.look button svg { display: block; margin: auto; }
+.look button:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+.msg { font-size: 13px; color: var(--ink-soft); min-height: 1em; }
+.msg.err { color: var(--err); }
+.topbar .msg { position: absolute; top: 64px; left: 50%; transform: translateX(-50%); white-space: nowrap; }
 
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--mono);
-      font-size: 15px;
-      line-height: 1.7;
-      -webkit-font-smoothing: antialiased;
-    }
+/* ── pinned stage ── */
+.track { position: relative; height: 400vh; }   /* 4 stops: hero, ask anything, you create, your call */
+.snap { position: absolute; left: 0; width: 1px; height: 1px; scroll-snap-align: start; scroll-snap-stop: always; }
+.stage { position: sticky; top: 0; height: 100vh; overflow: hidden; }
+.shade { position: absolute; inset: 0; background: var(--shade); opacity: 0; pointer-events: none; }
 
-    a { color: inherit; }
+.hero-copy { position: absolute; left: 0; right: 0; text-align: center; pointer-events: none; will-change: transform, opacity; }
+.tagline { margin: 0 0 4px; font-size: clamp(15px, 1.4vw, 22px); font-weight: 500; color: var(--ink-soft); letter-spacing: 0.01em; }
+.title {
+  margin: 0; line-height: 0.9; font-weight: 600; letter-spacing: -0.05em;
+  font-size: min(17vw, 30vh);
+  background: linear-gradient(180deg, var(--title-a) 0%, var(--title-b) 45%, var(--title-c) 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(var(--title-shadow));
+}
 
-    .wrap { width: 100%; max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+.scene {
+  position: absolute; left: 0; top: 0; width: 1920px; height: 960px;
+  transform-origin: 0 0; will-change: transform;
+}
+.base { position: absolute; inset: 0; border-radius: 12px; overflow: hidden;
+  box-shadow: 0 0 0 1.5px rgba(22, 16, 30, 0.10), 0 6px 16px rgba(22, 16, 30, 0.10), 0 40px 90px -20px rgba(22, 16, 30, 0.30), 0 110px 220px -50px rgba(22, 16, 30, 0.30); }
+:root[data-look="b"] .base { box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.10), 0 40px 120px rgba(0, 0, 0, 0.7); }
 
-    /* ── LOGO SLOT ──
-       Placeholder mark. Swap the div for <img class="logo sm" src="logo.svg" alt="Conductor"> when it exists. */
-    .logo {
-      width: 28px; height: 28px;
-      border: 1px solid var(--accent);
-      border-radius: 8px;
-      display: grid; place-items: center;
-      flex-shrink: 0;
-    }
-    .logo::after {
-      content: "";
-      width: 8px; height: 8px;
-      border-radius: 2px;
-      background: var(--accent);
-    }
+/* scroll cue on the opening view */
+.scroll-cue { position: absolute; z-index: 14; left: 50%; bottom: max(26px, env(safe-area-inset-bottom, 0px)); transform: translateX(-50%);
+  display: inline-flex; align-items: center; gap: 10px; padding: 11px 18px 11px 20px; border-radius: 999px;
+  background: var(--cue-bg); color: var(--cue-ink); border: 1px solid var(--glass-line);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: 0 10px 30px rgba(20, 10, 40, 0.18);
+  font: 600 14.5px var(--sans); letter-spacing: 0.01em; text-decoration: none; cursor: pointer; transition: opacity 0.3s ease; }
+.scroll-cue svg { animation: cue-bob 1.6s ease-in-out infinite; }
+@keyframes cue-bob { 0%, 100% { transform: translateY(-2px); } 50% { transform: translateY(3px); } }
+:root { --cue-bg: rgba(242, 239, 233, 0.92); --cue-ink: #16101E; }
+:root[data-look="b"] { --cue-bg: rgba(30, 30, 34, 0.85); --cue-ink: #ffffff; }
+.base img { position: absolute; inset: 0; width: 100%; height: 100%; transition: opacity 0.6s ease; }
+.base .veil { position: absolute; inset: 0; background: var(--veil); opacity: 0; transition: opacity 0.6s ease; }
+.base .blurred { opacity: 0; filter: blur(6px) saturate(0.95); transform: scale(1.04); transition: opacity 0.6s ease; }
+.scene.dim .base .blurred { opacity: 1; }
+.scene.dim .base .veil { opacity: 1; }
 
-    /* ── TOP BAR ── */
-    .top { padding-top: 24px; display: flex; align-items: center; }
+/* floating windows brought up per feature */
+.fw {
+  position: absolute; opacity: 0; transform: translateY(18px) scale(0.97);
+  transition: opacity 0.5s ease, transform 0.6s cubic-bezier(.2,.8,.2,1);
+  filter: drop-shadow(0 24px 40px rgba(0, 0, 0, 0.55));
+  pointer-events: none;
+}
+.fw.on { opacity: 1; transform: none; }
+.fw img { position: absolute; inset: 0; width: 100%; height: 100%; transition: opacity 0.5s ease; }
+.crop { border-radius: 12px; background-repeat: no-repeat; }
+.chips { position: absolute; display: flex; gap: 10px; justify-content: center; }
+.chip {
+  padding: 7px 14px; border-radius: 999px; background: var(--run); color: #fff;
+  font: 600 17px var(--sans); white-space: nowrap; box-shadow: 0 8px 22px rgba(0,0,0,0.4);
+  opacity: 0; transform: translateY(8px) scale(0.9); transition: opacity 0.35s ease, transform 0.4s cubic-bezier(.2,.9,.3,1.3);
+}
+.chip.on { opacity: 1; transform: none; }
+/* teaching labels: explain a control, not a change */
+.chip.teach { background: rgba(22, 16, 30, 0.86); border: 1px solid rgba(199, 125, 255, 0.7); font-weight: 500; font-size: 15px; }
+.chip.teach b { color: #E2C6FF; font-weight: 600; }
+/* try-asking pills in the feature card */
+.asks { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; margin-top: 1em; }
+.ask { padding: 0.42em 0.9em; border-radius: 999px; border: 1px solid var(--bubble-line); background: rgba(255, 255, 255, 0.06); cursor: pointer; font-family: inherit;
+  color: var(--bubble-ink-soft); font-size: var(--b, 20px); line-height: 1.3; text-align: left; transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease; }
+.ask:hover { background: rgba(255, 255, 255, 0.16); }
+.ask:focus-visible { outline: 2px solid var(--bubble-ink); outline-offset: 1px; }
+.ask.on { background: var(--run); border-color: transparent; color: #fff; }
+.tick { position: absolute; border-radius: 8px; box-shadow: 0 0 0 3px var(--run); opacity: 0; transition: opacity 0.3s ease; }
+.tick.on { opacity: 1; }
 
-    /* ── INTRO: top bar + hero over a full-width background video ──
-       A gradient over the backdrop keeps the text readable and fades into the page. */
-    .intro {
-      position: relative; isolation: isolate;
-      --muted: #b9b9c2;   /* brighter over video */
-      min-height: min(92vh, 900px);
-      display: flex; flex-direction: column;
-    }
-    .intro::before {
-      content: "";
-      position: absolute; inset: 0; z-index: -1;
-      background: linear-gradient(180deg,
-        rgb(10 10 11 / 0.55) 0%, rgb(10 10 11 / 0.45) 45%, rgb(10 10 11 / 0.85) 85%, var(--bg) 100%);
-    }
-    .backdrop { position: absolute; inset: 0; z-index: -2; overflow: hidden; }
-    .backdrop video { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* ── Conductor panel, rebuilt from the app (350x500 at scale 1) ── */
+.cp {
+  position: absolute; left: 0; top: 0; width: 350px; height: 500px;
+  transform-origin: 0 0; display: flex; flex-direction: column; gap: 4px; padding-bottom: 10px;
+  color: #ebebf5; font: 13px/1.25 var(--sans);
+}
+.cp.glide { transition: transform 0.85s cubic-bezier(.2,.8,.2,1); }
+/* values below are the app's ui/theme.py and ui/style.py tokens */
+.cp-panel, .cp-pill, .term-pop {
+  background: rgba(0, 0, 0, 0.38);
+  -webkit-backdrop-filter: blur(28px) saturate(1.5); backdrop-filter: blur(28px) saturate(1.5);
+  box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.14);
+}
+.cp-panel { flex: 1; min-height: 0; display: flex; flex-direction: column; border-radius: 22px; overflow: hidden; }
+.cp-head { flex: none; display: flex; align-items: center; gap: 6px; padding: 10px 12px 7px 10px; color: #a1a1a8; }
+.cp-head .ib { width: 22px; height: 22px; display: grid; place-items: center; flex: none; }
+.cp-head .sp { flex: 1; }
+.cp-head .count { font-size: 11px; color: #86868c; }
+.cp-msgs { flex: 1; min-height: 0; padding: 14px 12px 7px; display: flex; flex-direction: column; justify-content: flex-end; gap: 8px; overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 24px); mask-image: linear-gradient(to bottom, transparent, #000 24px); }
+.cp-empty { margin: auto; padding: 32px; text-align: center; color: #86868c; font-size: 13px; }
+.u, .r { flex: none; border-radius: 14px; padding: 8px 12px; }
+.u { align-self: flex-end; max-width: 294px; background: rgba(123, 44, 191, 0.78); color: #fff; }
+.r { align-self: flex-start; min-width: 246px; max-width: 296px; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.10); color: #ebebf5; }
+.r p { margin: 0; }
+.r ol { padding-left: 0; list-style: none; margin-bottom: 0; }
+.thinking { color: #86868c; font-style: italic; }
+.term { color: #ebebf5; text-decoration: underline; }
+.term-pop { position: absolute; z-index: 4; width: 260px; padding: 12px 14px; border-radius: 18px; color: #ebebf5; font-size: 13px; }
+.term-pop.fade { animation: term-fade 0.15s ease both; }
+@keyframes term-fade { from { opacity: 0; } to { opacity: 1; } }
+.votes { flex: none; align-self: flex-start; display: flex; align-items: center; gap: 4px; height: 22px; margin-top: -5px; padding-left: 6px; font-size: 12px; color: #ebebf5; }
+.votes span { padding: 0 6px; }
+.votes i { font-style: normal; font-size: 11px; color: #86868c; }
+.card .steps { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 2px; font-size: 11px; color: #86868c; }
+.card .steps li { padding-left: 2px; }
+.card .steps li.cur { color: #ebebf5; font-weight: 600; }
+.card .act { display: block; margin: 6px auto 0; width: 140px; height: 32px; border: 0; border-radius: 15px; background: rgba(123, 44, 191, 0.78); color: #fff; font: 600 13px var(--sans); position: relative; }
+.card .act.off { background: rgba(255, 255, 255, 0.10); color: #727278; }
+.card .act.press { transform: scale(0.94); filter: brightness(1.2); }
+.card .hint { margin-top: 6px; padding-left: 2px; font-size: 10px; color: #727278; line-height: 1.5; }
+.card .status { margin-top: 4px; padding-left: 2px; font-size: 10px; color: #a1a1a8; }
+.cp-pill { flex: none; display: flex; flex-direction: column; padding: 4px 4px 6px; border-radius: 23px; }
+.cp-input { display: flex; align-items: flex-end; gap: 4px; min-height: 38px; }  /* grows with its text, like the app's field */
+.cp-input .text { flex: 1; min-width: 0; padding: 11px 4px 11px 12px; color: #ebebf5; }
+.cp-input .text:empty::before { content: attr(data-ph); color: #86868c; }
+.cp-input .text.typing::after { content: ""; display: inline-block; width: 1px; height: 14px; margin-left: 1px; background: #fff; vertical-align: -2px; }
+.cp-input .send { width: 30px; height: 30px; margin: 0 8px 4px 0; border-radius: 11px; background: rgba(123, 44, 191, 0.78); display: grid; place-items: center; flex: none; }
+.cp-input.busy .send { background: rgba(255, 255, 255, 0.10); }
+.cp-opts { display: flex; align-items: center; justify-content: space-between; padding: 2px 8px 0; }
+.cp-explain { height: 20px; padding: 0 10px; display: flex; align-items: center; box-sizing: border-box; border-radius: 11px; border: 1px solid rgba(255, 255, 255, 0.10); color: #86868c; font-size: 11px; transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease; }
+.cp-explain.on { background: rgba(123, 44, 191, 0.78); border-color: transparent; color: #ebebf5; }
+.cp-mic { width: 48px; height: 20px; box-sizing: border-box; display: flex; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.10); color: #a1a1a8; }
+.cp-mic span { display: grid; place-items: center; }
+.cp-mic span:first-child { width: 30px; border-right: 1px solid rgba(255, 255, 255, 0.10); }
+.cp-mic span:last-child { flex: 1; }
+.pop { animation: pop 0.35s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes pop { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
-    /* ── HERO: sits below the middle of the backdrop ── */
-    .hero {
-      flex: 1;
-      display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
-      text-align: center;
-      padding-bottom: clamp(72px, 15vh, 170px);
-    }
-    .hero h1, .hero p { text-shadow: 0 1px 24px rgb(0 0 0 / 0.5); }
+/* pointer */
+.cursor { position: absolute; left: 0; top: 0; width: 34px; height: 34px; opacity: 0; z-index: 5;
+  transition: transform 0.8s cubic-bezier(.45,.05,.2,1), opacity 0.3s ease; pointer-events: none; }
+.cursor.on { opacity: 1; }
+.cursor svg { width: 100%; height: 100%; transition: transform 0.12s ease; transform-origin: 6px 4px; }
+.cursor.press svg { transform: scale(0.84); }
+.ripple { position: absolute; left: 6px; top: 4px; width: 44px; height: 44px; margin: -22px 0 0 -22px; border-radius: 50%; border: 3px solid rgba(255,255,255,0.9); opacity: 0; }
+.cursor.press .ripple { animation: ripple 0.5s ease-out; }
+@keyframes ripple { from { opacity: 0.9; transform: scale(0.3); } to { opacity: 0; transform: scale(1.4); } }
 
-    h1 {
-      font-size: clamp(40px, 7vw, 64px);
-      font-weight: 700;
-      line-height: 1;
-      letter-spacing: -0.03em;
-    }
+/* ── feature bubble (screen space, over the blurred part of Logic) ── */
+.bubble {
+  position: absolute; z-index: 10; overflow: hidden;
+  border-radius: 22px; border: 1px solid var(--bubble-line); color: var(--bubble-ink);
+  background: var(--glass); -webkit-backdrop-filter: blur(24px) saturate(1.2); backdrop-filter: blur(24px) saturate(1.2);
+  box-shadow: 0 20px 60px rgba(10, 6, 50, 0.35);
+  opacity: 0; transition: opacity 0.5s ease, left 0.85s cubic-bezier(.2,.8,.2,1); pointer-events: none;
+}
+.bubble.on { opacity: 1; pointer-events: auto; }
+.slides { position: relative; }
+.slide { position: absolute; inset: 0 auto auto 0; width: 100%; opacity: 0; transform: translateX(40px);
+  transition: opacity 0.45s ease, transform 0.55s cubic-bezier(.2,.8,.2,1); }
+.slide { pointer-events: none; }
+.slide.cur { position: relative; opacity: 1; transform: none; pointer-events: auto; }
+.slide.past { transform: translateX(-40px); }
+.slide .eyebrow { margin: 0 0 14px; font-size: var(--eb, 14px); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--bubble-ink-soft); }
+.slide h2 { margin: 0; font-size: var(--h, 56px); line-height: 1.02; letter-spacing: -0.03em; font-weight: 600; text-wrap: balance; }
+.slide p.body { margin: 0.7em 0 0; font-size: var(--b, 20px); line-height: 1.42; color: var(--bubble-ink-soft); max-width: 34ch; }
 
-    .tagline {
-      margin-top: 18px;
-      font-size: clamp(16px, 2.2vw, 19px);
-      color: var(--text);
-    }
+.dots {
+  position: absolute; z-index: 12; left: 50%; bottom: max(18px, env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%); display: flex; align-items: center; padding: 3px 7px;
+  border-radius: 999px; background: var(--glass); border: 1px solid var(--bubble-line);
+  -webkit-backdrop-filter: blur(24px) saturate(1.2); backdrop-filter: blur(24px) saturate(1.2);
+  box-shadow: 0 20px 60px rgba(10, 6, 50, 0.35);
+  opacity: 0; transition: opacity 0.4s ease; pointer-events: none;
+}
+.dots.on { opacity: 1; pointer-events: auto; }
+.dots button { position: relative; width: 20px; height: 20px; padding: 0; border: 0; background: transparent; cursor: pointer; }
+.dots button::before { content: ""; position: absolute; inset: -12px 0; } /* taller tap area */
+.dots button::after { content: ""; position: absolute; left: 50%; top: 50%; width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.42); transition: background 0.25s ease; }
+.dots button:hover::after { background: rgba(255, 255, 255, 0.7); }
+.dots button[aria-current="step"]::after { background: #fff; }
+.dots button:focus-visible { outline: 2px solid var(--bubble-ink); border-radius: 50%; }
 
-    .btn {
-      display: inline-flex; align-items: center; gap: 10px;
-      background: var(--btn);
-      color: #fff;
-      font: 600 15px/1 var(--mono);
-      text-decoration: none;
-      padding: 15px 24px;
-      border-radius: 10px;
-      transition: background 0.15s ease, transform 0.15s ease;
-    }
-    .btn:hover { background: var(--btn-h); transform: translateY(-1px); }
-    .btn:focus-visible { outline: 2px solid var(--text); outline-offset: 3px; }
+/* ── end ── */
+.cta {
+  min-height: 100vh; scroll-snap-align: start; display: flex; flex-direction: column; justify-content: center; align-items: center;
+  text-align: center; gap: 18px;
+  padding-block: 120px 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.cta h2 { margin: 0; font-size: clamp(40px, 6vw, 88px); letter-spacing: -0.04em; line-height: 1; font-weight: 600; }
+.cta p { margin: 0; max-width: 46ch; font-size: clamp(16px, 1.4vw, 20px); line-height: 1.45; color: var(--ink-soft); }
+.cta form.join { display: flex; gap: 10px; width: min(520px, 100%); flex-wrap: wrap; }
+.cta .field { flex: 1 1 240px; min-width: 0; }
+.cta footer { margin-top: auto; padding-top: 60px; font-size: 13px; color: var(--ink-soft); display: flex; flex-direction: column; gap: 6px; }
+.cta footer a { color: var(--ink); }
+/* center the signup block in the space above the footer */
+.cta h2 { margin-top: auto; font-size: clamp(36px, 5vw, 72px); }
+.hero-copy .title { font-size: min(15vw, 23vh); }
+.subline { margin: 0.55em 0 0; font-size: clamp(16px, 1.5vw, 22px); font-weight: 500; color: var(--ink-soft); }
+.eyebrow-hero { margin: 0 0 10px; font-size: clamp(11px, 0.95vw, 14px); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft); }
+.tag-big { font-size: clamp(18px, 1.9vw, 28px); font-weight: 600; color: var(--ink); margin-bottom: 6px; }
+.cta form.join { width: min(560px, 100%); justify-content: center; margin-top: 8px; }
+.cta .join input[type=email], .cta .join .btn { height: 56px; font-size: 16px; border-radius: 14px; }
+.cta .join .btn { padding: 0 28px; }
+/* only one email field on screen at a time: hide the top-bar form while the signup section is in view */
+.topbar form.join { transition: opacity 0.3s ease; }
+.topbar form.join.at-cta { opacity: 0; pointer-events: none; }
 
-    /* ── WAITLIST FORM (posts to the server's /v3/waitlist) ── */
-    .join { margin-top: 32px; display: flex; gap: 8px; width: 100%; max-width: 460px; }
-    .join input[type="email"] {
-      flex: 1; min-width: 0;
-      background: var(--surface); color: var(--text);
-      border: 1px solid var(--line); border-radius: 10px;
-      font: 15px/1 var(--mono); padding: 14px 16px;
-    }
-    .join input[type="email"]::placeholder { color: var(--muted); }
-    .join input[type="email"]:focus { outline: none; border-color: var(--accent); }
-    .join .btn { border: 0; cursor: pointer; white-space: nowrap; justify-content: center; }
-    .join .btn:disabled { opacity: 0.6; cursor: default; transform: none; }
-    .join .hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
-    .join-msg { margin-top: 14px; font-size: 13px; color: var(--text); }
-    .join-msg.err { color: #ef8a8a; }
-    .join-msg:empty { display: none; }
-    .join.done { display: none; }
-    @media (max-width: 560px) { .join { flex-direction: column; } }
-    .meta { margin-top: 14px; font-size: 12px; color: var(--muted); }
-
-    /* ── FEATURES: 2×2, text only ── */
-    .features {
-      padding-top: 64px; padding-bottom: 40px;
-      display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
-    }
-    .feature {
-      background: var(--surface);
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 32px;
-    }
-    .num { font-size: 12px; color: var(--accent); letter-spacing: 0.08em; }
-    .feature h2 {
-      margin-top: 10px;
-      font-size: clamp(19px, 2.4vw, 22px);
-      font-weight: 700;
-      line-height: 1.25;
-      letter-spacing: -0.02em;
-    }
-    .feature p { margin-top: 12px; color: var(--muted); }
-    .feature code { color: var(--text); }
-
-    /* ── FINAL CTA ── */
-    .final {
-      padding-top: 140px; padding-bottom: 120px;
-      display: flex; flex-direction: column; align-items: center;
-      text-align: center;
-    }
-    .final h2 { font-size: clamp(24px, 3.4vw, 32px); font-weight: 700; letter-spacing: -0.02em; }
-    .final p { margin-top: 10px; color: var(--muted); }
-
-    footer {
-      border-top: 1px solid var(--line);
-      padding: 28px 0 40px;
-      font-size: 12px;
-      color: var(--muted);
-    }
-    footer .wrap { display: flex; justify-content: space-between; gap: 16px; }
-    footer a { color: inherit; text-decoration: none; }
-    footer a:hover { color: var(--text, #fff); }
-
-    /* ── SCROLL RISE-IN (only when JS runs; text stays visible, so a screenshot shows everything) ── */
-    .js .reveal { transform: translateY(14px); transition: transform 0.7s ease; }
-    .js .reveal.in { transform: none; }
-
-    @media (max-width: 760px) {
-      .intro { min-height: min(86vh, 760px); }
-      .features { grid-template-columns: 1fr; padding-top: 48px; }
-      .feature { padding: 24px; }
-      .final { padding-top: 96px; padding-bottom: 88px; }
-      footer .wrap { flex-direction: column; gap: 4px; }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      html { scroll-behavior: auto; }
-      .js .reveal { transform: none; transition: none; }
-      .btn { transition: none; }
-    }
-  </style>
+@media (max-width: 760px) {
+  .topbar { height: 64px; gap: 10px; }
+  .topbar .msg { display: none; }
+  .slide p.body { max-width: none; }
+  .asks { flex-direction: row; align-items: center; flex-wrap: nowrap; overflow-x: auto; margin: 0.9em -20px 0; padding: 0 20px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .asks::-webkit-scrollbar { display: none; }
+  .ask { flex: none; min-height: 44px; font-size: 14px; white-space: nowrap; }
+  .fw { transition: opacity 0.5s ease, transform 0.6s cubic-bezier(.2,.8,.2,1), left 0.45s ease, top 0.45s ease, scale 0.45s ease, filter 0.35s ease; }
+  #comp-chips { transition: filter 0.35s ease; }
+  /* the plug-ins and their pills wait behind Conductor at the Revert moment */
+  .scene.held .fw { filter: blur(9px) drop-shadow(0 24px 40px rgba(0, 0, 0, 0.55)); }
+  .scene.held #comp-chips { filter: blur(7px); }
+  .dots button { width: 28px; }
+  /* faded per child, not on .cp: opacity on the parent would cut the children's glass off from what's behind them */
+  .cp-panel, .cp-pill { transition: opacity 0.35s ease; }
+  .cp.away .cp-panel, .cp.away .cp-pill { opacity: 0; }
+}
+@media (max-width: 380px) {
+  .topbar { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .wordmark { font-size: 15px; }
+  .topbar .join .btn { padding: 0 10px; font-size: 13px; }
+}
+@media (max-width: 760px) and (max-height: 620px) {
+  .bubble { padding: 14px 16px 16px !important; }
+  .slide h2 { font-size: 22px; }
+  .slide p.body { font-size: 14px; }
+  .asks { margin-left: -16px; margin-right: -16px; padding: 0 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-snap-type: none; }
+  .cp-panel, .cp-pill, .cp.glide, .fw, .chip, .slide, .cursor, .base img, .base .veil, .base .blurred { transition: none !important; }
+  .pop { animation: none; }
+}
+</style>
 </head>
 <body>
-  <script>document.documentElement.classList.add("js");</script>
 
-  <main>
-    <div class="intro">
-    <div class="backdrop" aria-hidden="true">
-      <video class="clip" autoplay muted loop playsinline preload="auto" poster="media/hero-bg.webp">
-        <source src="media/hero-bg.webm" type='video/webm; codecs="av01.0.08M.08"' />
-        <source src="media/hero-bg.mp4" type="video/mp4" />
-      </video>
+<header class="topbar">
+  <div class="wordmark">Conductor</div>
+  <form class="join" id="top-join" novalidate>
+    <div class="field"><input id="top-email" type="email" name="email" placeholder="Your email, for early access" autocomplete="email" aria-label="Email"></div>
+    <input class="hp" type="text" name="company" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <button class="btn" type="submit">Join the waitlist</button>
+  </form>
+  <p class="msg" aria-live="polite"></p>
+  <div class="look" role="group" aria-label="Page look">
+    <button type="button" data-look="a" aria-pressed="true" title="Light mode" aria-label="Light mode"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.5 1.5M17.2 17.2l1.5 1.5M5.3 18.7l1.5-1.5M17.2 6.8l1.5-1.5"/></svg></button>
+    <button type="button" data-look="b" aria-pressed="false" title="Dark mode" aria-label="Dark mode"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 1 1 9.8 3.5a6.8 6.8 0 0 0 10.7 10.7z"/></svg></button>
+  </div>
+</header>
+
+<main>
+  <section class="track" id="track" aria-label="What Conductor does">
+    <div class="snap" style="top:0"></div><div class="snap" style="top:100vh"></div><div class="snap" style="top:200vh"></div>
+    <div class="snap" style="top:300vh"></div>
+
+    <div class="stage" id="stage">
+      <div class="shade" id="shade"></div>
+      <div class="hero-copy" id="hero">
+        <h1 class="title">Conductor</h1>
+      </div>
+
+      <div class="scene" id="scene" aria-hidden="true">
+        <div class="base">
+          <img id="base-a" src="media/scene/logic-clean.webp" alt="">
+          <img id="base-b" src="media/scene/logic-clean.webp" alt="" style="opacity:0">
+          <img class="blurred" id="base-blur" src="media/scene/logic-clean.webp" alt="">
+          <div class="veil"></div>
+        </div>
+
+        <!-- floating windows, in scene pixels -->
+        <div class="fw" id="w-eq" style="left:585px;top:268px;width:792px;height:425px">
+          <img id="eq-before" src="media/scene/eq-before.webp" alt="">
+          <img id="eq-after" src="media/scene/eq-after.webp" alt="" style="opacity:0">
+          <div class="chips" style="right:60px;top:44px"><span class="chip" id="c-low">Low Cut → 80 Hz</span><span class="chip" id="c-shelf">High Shelf → −2 dB</span></div>
+        </div>
+        <div class="fw" id="w-comp" style="left:640px;top:182px;width:695px;height:582px">
+          <img src="media/scene/compressor.webp" alt="">
+        </div>
+        <div class="fw" id="w-verb" style="left:664px;top:257px;width:634px;height:446px"><img src="media/scene/verb.webp" alt=""></div>
+        <div class="chips" id="verb-chips" style="left:681px;width:600px;top:721px"><span class="chip" id="c-verb">Supermassive · Mix → 40%</span></div>
+        <div class="chips" id="comp-chips" style="left:687px;width:600px;top:774px">
+          <span class="chip" id="c-ratio">Ratio → 2:1</span>
+          <span class="chip" id="c-attack">Attack → 30 ms</span>
+          <span class="chip" id="c-release">Release → 100 ms</span>
+        </div>
+        <div class="chips" id="teach-chips" style="left:640px;width:720px;top:850px;flex-wrap:wrap;gap:8px">
+          <span class="chip teach" id="k-thr"><b>Threshold</b> · when it kicks in</span>
+          <span class="chip teach" id="k-ratio"><b>Ratio</b> · how hard it squeezes</span>
+          <span class="chip teach" id="k-attack"><b>Attack</b> · how fast it grabs</span>
+          <span class="chip teach" id="k-release"><b>Release</b> · how fast it lets go</span>
+        </div>
+        <div class="fw" id="w-master" style="left:602px;top:234px;width:759px;height:490px">
+          <img src="media/scene/mastering.webp" alt="">
+          <div class="chips" style="right:16px;top:44px"><span class="chip" id="c-loud">Loudness → +2 dB</span></div>
+        </div>
+        <!-- just the Drums stem: its track header next to the part of the lane with audio in it -->
+        <div class="fw crop" id="w-stems" style="left:635px;top:380px;width:650px;height:66px;overflow:hidden">
+          <div style="position:absolute;left:0;top:0;width:290px;height:66px;background:url(media/scene/logic-stems.webp) -265px -233px / 1920px 960px no-repeat"></div>
+          <div style="position:absolute;left:290px;top:0;width:360px;height:66px;background:url(media/scene/logic-stems.webp) -1295px -233px / 1920px 960px no-repeat"></div>
+        </div>
+
+        <!-- Conductor -->
+        <div class="cp" id="cp">
+          <div class="cp-panel">
+            <div class="cp-head">
+              <div class="ib"><svg width="13.3" height="9.3" viewBox="0 0 13.3 9.3" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M.65.65h12M.65 4.65h12M.65 8.65h12"/></svg></div>
+              <div class="sp"></div>
+              <div class="count" id="cp-count">89 messages left</div>
+              <div class="sp"></div>
+              <div class="ib"><svg width="11" height="2" viewBox="0 0 11 2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 1h9"/></svg></div>
+              <div class="ib"><svg width="9" height="9" viewBox="0 0 9 9" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M1 1l7 7M8 1L1 8"/></svg></div>
+            </div>
+            <div class="cp-msgs" id="cp-msgs"><div class="cp-empty">Ask anything about your Logic Pro session.</div></div>
+          </div>
+          <div class="cp-pill">
+            <div class="cp-input" id="cp-input"><div class="text" id="cp-text" data-ph="Ask anything about Logic Pro…"></div><div class="send"><svg width="9" height="10" viewBox="0 0 8.8 9.8" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.4.9v8M.9 4.4L4.4.9l3.5 3.5"/></svg></div></div>
+            <div class="cp-opts">
+              <div class="cp-explain" id="cp-explain">Explain Mode</div>
+              <div class="cp-mic"><span><svg width="10" height="12" viewBox="0 0 10 12" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"><rect x="3" y=".6" width="4" height="7" rx="2"/><path d="M.8 5.5a4.2 4.2 0 0 0 8.4 0M5 9.7v1.7"/></svg></span><span><svg width="7" height="5" viewBox="0 0 7 5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l2.5 2.6L6 1"/></svg></span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="cursor" id="cursor"><svg viewBox="0 0 34 34"><path d="M6 4l0 22 6-5.6 4 9 3.6-1.6-4-8.8 8.2-.4z" fill="#fff" stroke="#000" stroke-width="1.6" stroke-linejoin="round"/></svg><span class="ripple"></span></div>
+      </div>
+
+      <div class="bubble" id="bubble">
+        <div class="slides" id="slides">
+          <div class="slide" data-step="1"><h2>Ask anything.</h2><p class="body">Concise answers to any question, with technical terms defined in a click.</p>
+            <div class="asks" id="asks-1"></div>
+          </div>
+          <div class="slide" data-step="3"><h2>You create. Conductor does the rest.</h2><p class="body">Manage stock and third-party plug-ins, and find buried settings, just by asking.</p>
+            <div class="asks" id="asks-3"></div>
+          </div>
+          <div class="slide" data-step="2"><h2>Your session, your call.</h2><p class="body">Conductor shows you every change first; one click reverts the action.</p></div>
+        </div>
+      </div>
+
+      <a class="scroll-cue" id="scroll-cue" href="#">Scroll to see it work
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"/><path d="M6 13l6 6 6-6"/></svg>
+      </a>
+
+      <nav class="dots" id="dots" aria-label="Features">
+        <button type="button" data-go="1" aria-label="Ask anything"></button>
+        <button type="button" data-go="2" aria-label="Your call"></button>
+        <button type="button" data-go="3" aria-label="You create"></button>
+      </nav>
     </div>
+  </section>
 
-    <header class="top wrap">
-      <div class="logo" role="img" aria-label="Conductor"></div>
-    </header>
-
-    <section class="hero wrap">
-      <h1>Conductor</h1>
-      <p class="tagline">An AI assistant for Logic Pro.</p>
-      <form class="join" id="hero-join" novalidate>
-        <input type="email" name="email" placeholder="you@example.com" autocomplete="email" aria-label="Email" required />
-        <input class="hp" type="text" name="company" tabindex="-1" autocomplete="off" aria-hidden="true" />
-        <button class="btn" type="submit">Join the waitlist</button>
-      </form>
-      <p class="join-msg" role="status" aria-live="polite"></p>
-      <p class="meta">macOS 12 or later</p>
-    </section>
-    </div>
-
-    <section class="features wrap">
-      <article class="feature reveal">
-        <p class="num">01</p>
-        <h2>Ask about your session</h2>
-        <p>Conductor reads your screen and Logic's mixer, so "why does my vocal sound thin?" gets an answer about your track, not a generic one.</p>
-      </article>
-
-      <article class="feature reveal">
-        <p class="num">02</p>
-        <h2>Set plug-ins from chat</h2>
-        <p>Say <code>"pull the compressor threshold down 3 dB"</code>. Conductor shows the change as a card, runs it in Logic, and puts it back with one click if you don't like it.</p>
-      </article>
-
-      <article class="feature reveal">
-        <p class="num">03</p>
-        <h2>Master with Logic's Mastering Assistant</h2>
-        <p>Turn it on, read its settings and adjust loudness, width or EQ by asking. Conductor drives Logic's own mastering, not a black box.</p>
-      </article>
-
-      <article class="feature reveal">
-        <p class="num">04</p>
-        <h2>Split stems in one ask</h2>
-        <p>Pull vocals, drums, bass and the rest out of a region with Logic's Stem Splitter. No extra plug-ins, no digging through menus.</p>
-      </article>
-    </section>
-
-    <section class="final wrap reveal" id="final">
-      <h2>Free to start.</h2>
-      <p>Join the waitlist. 100 free messages once you're in.</p>
-      <form class="join" id="final-join" novalidate>
-        <input type="email" name="email" placeholder="you@example.com" autocomplete="email" aria-label="Email" required />
-        <input class="hp" type="text" name="company" tabindex="-1" autocomplete="off" aria-hidden="true" />
-        <button class="btn" type="submit">Join the waitlist</button>
-      </form>
-      <p class="join-msg" role="status" aria-live="polite"></p>
-      <p class="meta">Beta · macOS 12 or later</p>
-    </section>
-  </main>
-
-  <footer>
-    <div class="wrap">
+  <section class="cta" id="join">
+    <h2>Try Conductor free.</h2>
+    <form class="join" id="cta-join" novalidate>
+      <div class="field"><input id="cta-email" type="email" name="email" placeholder="you@example.com" autocomplete="email" aria-label="Email"></div>
+      <input class="hp" type="text" name="company" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <button class="btn" type="submit">Join the waitlist</button>
+    </form>
+    <p class="msg" aria-live="polite"></p>
+    <footer>
       <span>© 2026 Conductor · Not affiliated with Apple</span>
+      <span>Logic Pro is a trademark of Apple Inc., registered in the U.S. and other countries and regions.</span>
       <span><a href="/privacy">Privacy</a> · <a href="mailto:hello@askconductor.ai">hello@askconductor.ai</a></span>
-    </div>
-  </footer>
+      <span>Music in the demo: Elektronomia, “Sky High” [NCS Release]</span>
+    </footer>
+  </section>
+</main>
 
-  <script>
-    // Waitlist signup. Same answer for a new or repeat email; the server never says who's on the list.
-    (() => {
-      const local = ["127.0.0.1", "localhost"].includes(location.hostname);
-      const API = local ? "http://127.0.0.1:8000" : "https://api.askconductor.ai";
-      const params = new URLSearchParams(location.search);
-      let source = params.get("utm_source") || "";
+<script>
+// A/B look switch. ?v=b opens B; the last pick is remembered in this browser.
+(() => {
+  const root = document.documentElement, btns = document.querySelectorAll(".look button[data-look]");
+  const set = (v) => {
+    if (v === "b") root.dataset.look = "b"; else delete root.dataset.look;
+    btns.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.look === (v === "b" ? "b" : "a"))));
+  };
+  let v = new URLSearchParams(location.search).get("v");
+  if (!v) { try { v = localStorage.getItem("scene-look-wb"); } catch (_) {} }
+    set(v);
+  btns.forEach((b) => b.addEventListener("click", () => { set(b.dataset.look); try { localStorage.setItem("scene-look-wb", b.dataset.look); } catch (_) {} }));
+})();
+
+// Waitlist signup, same as preview.html. Same answer for a new or repeat email.
+(() => {
+  const local = ["127.0.0.1", "localhost"].includes(location.hostname);
+  const API = local ? "http://127.0.0.1:8000" : "https://api.askconductor.ai";
+  const params = new URLSearchParams(location.search);
+  let source = params.get("utm_source") || "";
+  try {
+    const ref = document.referrer && new URL(document.referrer).hostname;
+    if (!source && ref && ref !== location.hostname) source = ref.replace(/^www\./, "");
+  } catch (_) {}
+  const forms = [...document.querySelectorAll("form.join")];
+  const done = () => forms.forEach((f) => {
+    f.classList.add("done");
+    f.nextElementSibling.textContent = "You're on the list. We'll email you when you're in.";
+    f.nextElementSibling.classList.remove("err");
+  });
+  forms.forEach((form) => {
+    const msg = form.nextElementSibling, btn = form.querySelector("button");
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = form.email.value.trim();
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+        if (form.id === "top-join" && !email) {
+          // jump straight to the signup section (no scroll-through of the demo), then put the cursor in its email box
+          const j = document.getElementById("join");
+          window.scrollTo({ top: j.getBoundingClientRect().top + window.scrollY, behavior: "instant" });
+          j.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 350, easing: "ease-out" });
+          document.getElementById("cta-email").focus({ preventScroll: true });
+          return;
+        }
+        msg.textContent = "Enter a valid email address."; msg.classList.add("err"); return;
+      }
+      btn.disabled = true; msg.textContent = "";
       try {
-        const ref = document.referrer && new URL(document.referrer).hostname;
-        if (!source && ref && ref !== location.hostname) source = ref.replace(/^www\./, "");
-      } catch (_) {}
-
-      const done = () => {
-        document.querySelectorAll("form.join").forEach((f) => {
-          f.classList.add("done");
-          f.nextElementSibling.textContent = "You're on the list. We'll email you when you're in.";
-          f.nextElementSibling.classList.remove("err");
+        const r = await fetch(API + "/v3/waitlist", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, source: source.slice(0, 100) || null, company: form.company.value }),
         });
-      };
+        if (r.ok) return done();
+        msg.textContent = r.status === 429 ? "Too many tries. Try again in a bit."
+          : r.status === 422 ? "Enter a valid email address." : "Something went wrong. Try again.";
+      } catch (_) {
+        msg.textContent = "Couldn't reach the server. Check your connection and try again.";
+      }
+      msg.classList.add("err"); btn.disabled = false;
+    });
+  });
+})();
 
-      document.querySelectorAll("form.join").forEach((form) => {
-        const msg = form.nextElementSibling;
-        const btn = form.querySelector("button");
-        form.addEventListener("submit", async (e) => {
-          e.preventDefault();
-          const email = form.email.value.trim();
-          if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-            msg.textContent = "Enter a valid email address.";
-            msg.classList.add("err");
-            return;
-          }
-          btn.disabled = true;
-          msg.textContent = "";
-          try {
-            const r = await fetch(API + "/v3/waitlist", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ email, source: source.slice(0, 100) || null, company: form.company.value }),
-            });
-            if (r.ok) return done();
-            msg.textContent = r.status === 429 ? "Too many tries. Try again in a bit."
-              : r.status === 422 ? "Enter a valid email address." : "Something went wrong. Try again.";
-          } catch (_) {
-            msg.textContent = "Couldn't reach the server. Check your connection and try again.";
-          }
-          msg.classList.add("err");
-          btn.disabled = false;
-        });
-      });
-    })();
+// The scene.
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const W = 1920, H = 960, STOPS = 3;
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const track = $("track"), stage = $("stage"), scene = $("scene"), hero = $("hero"), shade = $("shade");
+  const cp = $("cp"), msgs = $("cp-msgs"), text = $("cp-text"), cursor = $("cursor");
+  const bubble = $("bubble"), slides = [...document.querySelectorAll(".slide")], dots = $("dots");
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const ease = (t) => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-    (() => {
-      const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
-      const saveData = navigator.connection && navigator.connection.saveData;
-      const bg = document.querySelector(".backdrop video");
-      // Reduced motion or Save-Data: the poster only, nothing plays.
-      if (reduceMotion || saveData) { bg.removeAttribute("autoplay"); bg.preload = "none"; bg.pause(); }
+  // Conductor's spot in each phase, in scene pixels. Home is where the app really sits.
+  const PANEL = { home: [1335, 196, 1.5], feat: [1345, 108, 1.5] };
+  const bubbleX = () => { const g = layout.full; return g.x + W * g.s * 0.022; };
+  let layout = {}, step = -1, f = 0;
 
-      // Rise sections in once.
-      const reveal = new IntersectionObserver((entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting) { e.target.classList.add("in"); reveal.unobserve(e.target); }
-        });
-      }, { threshold: 0.15 });
-      document.querySelectorAll(".reveal").forEach((el) => reveal.observe(el));
-    })();
-  </script>
-  <script src="/visit.js" defer></script>
+  // Phone layout. "a": plug-in on top, Conductor under it. "b": bigger Conductor, plug-in tucked behind it.
+  const PHONE = "b";
+  const DESK_FEAT = PANEL.feat.slice();
+  const PLACED = ["w-eq", "w-comp", "w-verb", "w-master", "w-stems", "comp-chips", "verb-chips"];
+  const deskStyle = Object.fromEntries(PLACED.map((id) => [id, { left: $(id).style.left, top: $(id).style.top, width: $(id).style.width }]));
+  const CHIP_SCALE = 11 / 17;   // chips read at 11px on a phone, whatever the window behind them is scaled to
+  let phone = null, focus = false;   // focus: Conductor faded out, the plug-ins get the whole area
+
+  function putAt(id, k, sx, sy) {
+    const g = phone.g, s = $(id).style;
+    s.transformOrigin = "0 0"; s.left = (sx - g.x) / g.s + "px"; s.top = (sy - g.y) / g.s + "px"; s.scale = String(k / g.s);
+  }
+  function fit(id, box, center) {
+    const el = $(id), w = el.offsetWidth, h = el.offsetHeight, k = Math.min(box.w / w, box.h / h);
+    putAt(id, k, center ? box.x + (box.w - w * k) / 2 : box.x, center ? box.y + (box.h - h * k) / 2 : box.y);
+    return k;
+  }
+  function placeWindows() {
+    const { vw, y0, bottom, R, zone } = phone;
+    putAt("verb-chips", CHIP_SCALE, 12, focus ? y0 + R - 24 : y0 + 8);
+    $("verb-chips").style.width = "max-content";
+    const both = $("w-eq").classList.contains("on") && $("w-comp").classList.contains("on");
+    const stacked = PHONE === "a", chips = $("comp-chips").style;
+    if (focus) {
+      const whole = { x: 12, y: y0, w: vw - 24, h: R }, room = R - 38;
+      ["w-verb", "w-master", "w-stems"].forEach((id) => fit(id, whole, true));
+      const eqBox = both ? { ...whole, h: room * 0.45 } : whole;
+      const kq = fit("w-eq", eqBox, true);
+      fit("w-comp", both ? { ...whole, y: y0 + room * 0.45 + 8, h: room * 0.55 } : whole, true);
+      putAt("comp-chips", CHIP_SCALE, 12, y0 + R - 24);
+      Object.assign(chips, { width: (vw - 24) / CHIP_SCALE + "px", flexDirection: "", alignItems: "" });
+      const lowF = $("c-low").parentElement.style;
+      lowF.transformOrigin = "100% 0"; lowF.scale = String(CHIP_SCALE / kq);
+      return;
+    }
+    const box = stacked ? { x: 12, y: y0, w: vw - 24, h: zone } : { x: 12, y: y0, w: vw * 0.6, h: R * 0.5 };
+    ["w-verb", "w-master", "w-stems"].forEach((id) => fit(id, box, stacked));
+    let keq;
+    if (both && stacked) {
+      const h = zone - 30, eqW = (vw - 32) * 0.58;
+      keq = fit("w-eq", { x: 12, y: y0, w: eqW, h }, true);
+      fit("w-comp", { x: 20 + eqW, y: y0, w: vw - 32 - eqW, h }, true);
+    } else if (both) {
+      keq = fit("w-eq", { ...box, h: R * 0.24 }, false);
+      fit("w-comp", { ...box, y: y0 + R * 0.22, h: R * 0.42 }, false);
+    } else {
+      keq = fit("w-eq", box, stacked);
+      fit("w-comp", box, stacked);
+    }
+    if (stacked) { putAt("comp-chips", CHIP_SCALE, 12, y0 + zone - 24); chips.width = (vw - 24) / CHIP_SCALE + "px"; }
+    else { putAt("comp-chips", CHIP_SCALE, 12, bottom - 100); chips.width = "max-content"; chips.flexDirection = "column"; chips.alignItems = "flex-start"; }
+    const low = $("c-low").parentElement.style;
+    low.transformOrigin = "100% 0"; low.scale = String(CHIP_SCALE / keq);
+  }
+  function placePhone(g, vw, vh, top) {
+    const cs = getComputedStyle(bubble), pad = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom) + 2;
+    const card = Math.max(...slides.map((el) => el.offsetHeight)) + pad;
+    const y0 = top + 10, bottom = vh - 58 - card - 10, R = bottom - y0;
+    const stacked = PHONE === "a", zone = stacked ? R * 0.36 : 0;
+    const p = stacked ? Math.min((R - zone - 8) / 500, (vw - 24) / 350) : Math.min(0.8, R / 500, (vw - 24) * 0.7 / 350);
+    PANEL.feat = [((stacked ? (vw - 350 * p) / 2 : vw - 12 - 350 * p) - g.x) / g.s, (bottom - 500 * p - g.y) / g.s, p / g.s];
+    phone = { g, vw, y0, bottom, R, zone };
+    placeWindows();
+  }
+  function focusOutput(v) {
+    if (!phone || focus === v) return;
+    focus = v;
+    cp.classList.toggle("away", v);
+    scene.classList.remove("held");
+    if (v) cursor.classList.remove("on");
+    placeWindows();
+  }
+  // Conductor back in front while the plug-ins stay where they are, blurred
+  function holdOutput(v) {
+    if (!phone) return;
+    cp.classList.toggle("away", !v);
+    scene.classList.toggle("held", v);
+    if (!v) cursor.classList.remove("on");
+  }
+  function placeDesktop() {
+    phone = null; focus = false; cp.classList.remove("away"); scene.classList.remove("held");
+    PANEL.feat = DESK_FEAT;
+    PLACED.forEach((id) => Object.assign($(id).style, deskStyle[id], { transformOrigin: "", scale: "", flexDirection: "", alignItems: "" }));
+    Object.assign($("c-low").parentElement.style, { transformOrigin: "", scale: "" });
+  }
+
+  function measure() {
+    const vw = innerWidth, vh = innerHeight, narrow = vw < 760, top = narrow ? 64 : 76;
+    const heroW = narrow ? vw - 32 : Math.min(vw * 0.74, 1400);
+    // place the Logic window a fixed gap below the headline block, whatever its height
+    const hc = $("hero"); hc.style.top = (narrow ? vh * 0.13 : 76 + vh * 0.03) + "px";
+    const heroY = narrow ? vh * 0.34 : hc.offsetTop + hc.offsetHeight + vh * 0.05;
+    const hero = { s: heroW / W, x: (vw - heroW) / 2, y: heroY };
+    let full;
+    if (narrow) {
+      // phone: Logic fills the screen under the top bar, running off the sides and bottom, so the glass has something behind it
+      const s = Math.max((vh - top + 16) / H, vw / W);
+      full = { s, x: (vw - W * s) / 2, y: top + 8 };
+    } else {
+      const fw = Math.min(vw - 48, (vh - top - 24) * 2);
+      full = { s: fw / W, x: (vw - fw) / 2, y: top + Math.max(0, (vh - top - 24 - fw / 2) / 2) };
+    }
+    layout = { vw, vh, narrow, hero, full };
+    // bubble sits over the blurred left of Logic (phones: under the scene)
+    const sw = W * full.s;
+    if (narrow) {
+      Object.assign(bubble.style, { left: "12px", right: "12px", width: "auto", top: "auto", bottom: "58px", padding: "20px 20px 22px" });
+      bubble.style.setProperty("--h", "26px"); bubble.style.setProperty("--b", "15.5px"); bubble.style.setProperty("--eb", "11px");
+      placePhone(full, vw, vh, top);
+    } else {
+      placeDesktop();
+      const bw = Math.min(sw * 0.3, 600);
+      Object.assign(bubble.style, { left: bubbleX(step) + "px", right: "auto", width: bw + "px", bottom: "auto", padding: `${sw * 0.026}px ${sw * 0.024}px` });
+      bubble.style.setProperty("--h", clamp(sw * 0.032, 28, 64) + "px");
+      bubble.style.setProperty("--b", clamp(sw * 0.0108, 15, 21) + "px");
+      bubble.style.setProperty("--eb", clamp(sw * 0.0074, 11, 14) + "px");
+      requestAnimationFrame(placeBubble);
+    }
+    render();
+    if (step >= 1 && f >= 1) setPanel(PANEL.feat);
+  }
+
+  function placeBubble() {
+    if (layout.narrow) return;
+    const g = layout.full;
+    bubble.style.top = g.y + (H * g.s - bubble.offsetHeight) / 2 + "px";
+  }
+
+  function setPanel(p) {
+    const [x, y, s] = p;
+    cp.style.transform = `translate(${x}px, ${y}px) scale(${s})`;
+  }
+
+  function render() {
+    const rect = track.getBoundingClientRect();
+    f = clamp(-rect.top / layout.vh, 0, STOPS);
+    const t = ease(clamp(f, 0, 1));
+    const { hero: h, full: g } = layout;
+    const s = lerp(h.s, g.s, t), x = lerp(h.x, g.x, t), y = lerp(h.y, g.y, t);
+    scene.style.transform = `translate(${x}px, ${y}px) scale(${s})`;
+    hero.style.opacity = String(clamp(1 - t * 1.8, 0, 1));
+    hero.style.transform = `translateY(${-t * 80}px)`;
+    shade.style.opacity = String(t * 0.3);
+    const cue = $("scroll-cue"), cueOn = f < 0.08;
+    cue.style.opacity = cueOn ? "1" : "0"; cue.style.pointerEvents = cueOn ? "auto" : "none";
+    scene.classList.toggle("dim", f > 0.45);
+    bubble.classList.toggle("on", f > 0.7);
+    dots.classList.toggle("on", f > 0.7);
+
+    if (f < 1 && step <= 1) {
+      cp.classList.remove("glide");
+      const a = PANEL.home, b = PANEL.feat;
+      setPanel([lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t)]);
+    }
+    const next = f < 0.5 ? 0 : clamp(Math.round(f), 1, STOPS);
+    if (next !== step) go(next);
+  }
+
+  function go(n) {
+    const prev = step; step = n;
+    slides.forEach((el) => {
+      const k = +el.dataset.step;
+      el.classList.toggle("cur", k === n || (n === 0 && k === 1));
+      el.classList.toggle("past", k < n);
+    });
+    dots.querySelectorAll("[data-go]").forEach((b) => b.setAttribute("aria-current", +b.dataset.go === n ? "step" : "false"));
+    requestAnimationFrame(placeBubble);
+    if (!layout.narrow) bubble.style.left = bubbleX(n) + "px";
+    if (n >= 2) { cp.classList.add("glide"); setPanel(PANEL.feat); }
+    else if (n === 1 && f >= 1) { cp.classList.add("glide"); setPanel(PANEL.feat); }
+    play(n, prev);
+  }
+
+  // ── panel content ──
+  const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  const closeTermPopup = () => cp.querySelector(".term-pop")?.remove();
+  function clearPanel() { closeTermPopup(); msgs.innerHTML = '<div class="cp-empty">Ask anything about your Logic Pro session.</div>'; text.textContent = ""; text.classList.remove("typing"); }
+  const VOTES = "<span>Upvote ↑</span><i>·</i><span>Downvote ↓</span>";
+  // Where TermPopup.show_for puts it: just below the click, kept on screen.
+  function showTermPopup(term, definition) {
+    const r = term.getClientRects()[0] || term.getBoundingClientRect(), box = cp.getBoundingClientRect(), k = box.width / 350;
+    const x = (r.left + r.width / 2 - box.left) / k, y = (r.top + r.height / 2 - box.top) / k;
+    const maxX = (Math.min(scene.getBoundingClientRect().right, innerWidth) - box.left) / k - 8 - 260;
+    const p = document.createElement("div"); p.className = "term-pop" + (reduce ? "" : " fade"); p.textContent = definition;
+    p.style.left = Math.min(x - 20, maxX) + "px"; p.style.top = y + 14 + "px";
+    cp.appendChild(p);
+  }
+  function add(html, cls) {
+    msgs.querySelector(".cp-empty")?.remove();
+    const d = document.createElement("div"); d.className = cls + (reduce ? "" : " pop"); d.innerHTML = html; msgs.appendChild(d); return d;
+  }
+  const user = (q) => add(esc(q), "u");
+  function card(c) {
+    // one wire step can show as several numbered lines; the highlight is per wire step, like the app
+    let line = 0;
+    const steps = c.steps.map((s, w) => [].concat(s).map((t) => `<li data-w="${w}">${++line}. ${t}</li>`).join("")).join("");
+    const d = add(`<p>${c.text}</p><ol class="steps">${steps}</ol>
+      <button class="act" type="button" tabindex="-1">${c.btn || "Run"}</button><div class="hint">${c.hint || "Press ↵ to run<br>Press any key to stop"}</div><div class="status"></div>`, "r card");
+    add(VOTES, "votes");
+    return d;
+  }
+  function cardState(c, { cur = -1, btn = null, off = false, hint = null, status = "" }) {
+    c.querySelectorAll(".steps li").forEach((li) => li.classList.toggle("cur", +li.dataset.w === cur));
+    const b = c.querySelector(".act");
+    b.hidden = btn === null; if (btn) b.textContent = btn; b.classList.toggle("off", off);
+    const h = c.querySelector(".hint"); h.hidden = hint === null; if (hint) h.innerHTML = hint;
+    c.querySelector(".status").textContent = status;
+  }
+
+  // ── scene layers ──
+  const on = (id, v = true) => {
+    $(id).classList.toggle("on", v);
+    if (phone && (id === "w-eq" || id === "w-comp")) placeWindows();
+  };
+  const allLayers = ["w-eq", "w-comp", "w-verb", "w-master", "w-stems", "c-low", "c-shelf", "c-verb", "c-loud", "c-ratio", "c-attack", "c-release", "k-thr", "k-ratio", "k-attack", "k-release"];
+  let baseShown = "a";
+  function setBase(name) {
+    const src = `media/scene/${name}.webp`;
+    const a = $("base-a"), b = $("base-b");
+    const [show, hide] = baseShown === "a" ? [b, a] : [a, b];
+    if ((baseShown === "a" ? a : b).getAttribute("src") === src) return;
+    show.src = src; show.style.opacity = "1"; hide.style.opacity = "0"; baseShown = baseShown === "a" ? "b" : "a";
+    $("base-blur").src = src;
+  }
+  function reset(base = "logic-clean") {
+    allLayers.forEach((id) => on(id, false));
+    document.querySelectorAll(".ask.on").forEach((el) => el.classList.remove("on"));
+    $("eq-after").style.opacity = "0";
+    cursor.classList.remove("on");
+    clearPanel(); setBase(base);
+  }
+  function sceneXY(el) {
+    const r = el.getClientRects()[0] || el.getBoundingClientRect(), sr = scene.getBoundingClientRect(), k = sr.width / W;
+    return [(r.left + r.width / 2 - sr.left) / k, (r.top + r.height / 2 - sr.top) / k];
+  }
+
+  // ── timelines ──
+  let run = 0;
+  const STOP = Symbol("stop");
+  function play(n) {
+    const id = ++run;
+    focusOutput(false);
+    const wait = (ms) => new Promise((r) => setTimeout(r, reduce ? 0 : ms)).then(() => { if (id !== run) throw STOP; });
+    const type = async (q) => {
+      text.classList.add("typing");
+      for (let i = 1; i <= q.length; i++) { text.textContent = q.slice(0, i); await wait(32 + Math.random() * 30); }
+      await wait(350); text.textContent = ""; text.classList.remove("typing"); user(q);
+    };
+    const think = async (ms = 1100) => {
+      const t = add('<span class="thinking">Thinking…</span>', "r"), box = $("cp-input");
+      text.dataset.ph = "Press Esc to cancel"; box.classList.add("busy");
+      await wait(ms);
+      t.remove(); text.dataset.ph = "Ask anything about Logic Pro…"; box.classList.remove("busy");
+    };
+    const moveTo = async (xy, ms = 850) => {
+      cursor.classList.add("on");
+      cursor.style.transform = `translate(${xy[0] - 6}px, ${xy[1] - 4}px)`;
+      await wait(ms);
+    };
+    const click = async (btn) => {
+      cursor.classList.add("press"); btn && btn.classList.add("press"); await wait(160);
+      cursor.classList.remove("press"); btn && btn.classList.remove("press"); await wait(250);
+    };
+    const parkCursor = () => { cursor.style.transition = "none"; cursor.style.transform = "translate(1180px, 900px)"; void cursor.offsetWidth; cursor.style.transition = ""; };
+
+    $("cp-explain").classList.remove("on");
+    text.dataset.ph = "Ask anything about Logic Pro…"; $("cp-input").classList.remove("busy");
+    const T = timelines[n];
+    if (!T) return;
+    const loop = async () => {
+      try {
+        while (true) {
+          parkCursor();
+          await T({ wait, type, think, moveTo, click });
+          if (reduce) return;
+          await wait(6000);
+        }
+      } catch (e) { if (e !== STOP) throw e; }
+    };
+    loop();
+  }
+
+  const QUESTIONS = [
+    // Each answer underlines what the server's glossary (seed/glossary.json) would, with its set definition.
+    { label: "How do I reduce muddiness in my vocals?", q: "how do i reduce muddiness in my vocals?",
+      a: 'Muddy vocals usually have too much low-mid energy—the frequencies around 200–400 Hz that can make a voice sound boxy or cloudy. Make a broad, gentle cut around 250–350 Hz, starting at −2 to −3 <span class="term">dB</span>.',
+      term: "Decibel", def: "The unit for level and loudness. Small moves of 1-3 dB are often enough; about 10 dB louder sounds roughly twice as loud." },
+    { label: "What is latency?", q: "what is latency?",
+      a: 'Latency is the delay between making a sound and hearing it through Logic—for example, singing into a microphone and hearing your voice slightly late in your headphones. Logic’s <span class="term">I/O buffer size</span>—the amount of audio it processes at once—affects this: smaller settings reduce latency but make the computer work harder.',
+      term: "Buffer size", def: "How much audio your Mac works on at a time. Smaller means less delay when you play or sing, but works the computer harder; use small while recording and larger while mixing." },
+    { label: "How does a de-esser work?", q: "how does a de-esser work?",
+      a: 'A de-esser reduces harsh “s” and “sh” sounds in vocals without turning down the whole performance. The detection frequency tells it where to listen, and the <span class="term">threshold</span> sets how strong that sound must be before it reacts.',
+      term: "Threshold", def: "The level where a compressor starts working. Anything louder than the threshold gets turned down; anything quieter passes through untouched." },
+  ];
+  const ACTIONS = [
+    ["Add Valhalla Supermassive and raise the mix", "verb"],
+    ["Set compressor ratio to 4 and raise attack", "comp"],
+    ["Turn up loudness a bit", "master"],
+    ["Give me just the drums from this file", "stems"],
+  ];
+  const pick = { 1: 0, 3: 0 };
+  const showPill = (el) => {
+    el.classList.add("on");
+    const row = el.parentElement;
+    row.scrollTo({ left: el.offsetLeft - row.offsetLeft - (row.clientWidth - el.offsetWidth) / 2, behavior: reduce ? "auto" : "smooth" });
+  };
+  const pills = (n, labels) => labels.forEach((label, i) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "ask"; b.id = `ask-${n}-${i}`; b.textContent = label;
+    b.addEventListener("click", () => { pick[n] = i; play(n); });
+    $("asks-" + n).appendChild(b);
+  });
+  pills(1, QUESTIONS.map((c) => c.label));
+  pills(3, ACTIONS.map((a) => a[0]));
+
+  const PLUGIN_Q = "cut the rumble under 80 Hz and reduce airiness by a little";
+  const PLUGIN_CARD = {
+    text: 'I’ll use Channel <span class="term">EQ</span> to cut rumble below 80 Hz and gently reduce airiness with a 2 <span class="term">dB</span> high-shelf cut at 10 kHz.',
+    steps: [["Press <b>⌃⌘P</b>", "Type <b>Channel EQ</b>", "Press <b>Return</b>"], "Channel EQ · Low Cut Frequency → <b>80</b>", "Channel EQ · High Shelf Frequency → <b>10000</b>", "Channel EQ · High Shelf Gain → <b>-2</b>"],
+  };
+  const timelines = {
+    0: async () => { reset(); },
+    1: async ({ wait, type, think, moveTo, click }) => {
+      for (let n = 0; n < QUESTIONS.length; n++) {
+        const i = (pick[1] + n) % QUESTIONS.length, c = QUESTIONS[i];
+        reset(); showPill($("ask-1-" + i)); await wait(400);
+        if (c.win) on(c.win);
+        const explain = $("cp-explain");
+        if (!explain.classList.contains("on")) {
+          await moveTo(sceneXY(explain));
+          await click(null);
+          explain.classList.add("on");
+          await wait(350); cursor.classList.remove("on");
+        }
+        await type(c.q);
+        await think(1100);
+        const d = add(`<p>${c.a}</p>`, "r");
+        add(VOTES, "votes");
+        await wait(1400);
+        const term = d.querySelector(".term");
+        await moveTo(sceneXY(term));
+        await click(null);
+        showTermPopup(term, c.def);
+        await wait(3200);
+        // a click anywhere else closes it
+        const [mx, my] = sceneXY(msgs);
+        await moveTo([mx, my - msgs.offsetHeight * 0.3 * PANEL.feat[2]]);
+        await click(null);
+        closeTermPopup();
+        await wait(300); cursor.classList.remove("on");
+        await wait(700);
+      }
+    },
+    2: async ({ wait, moveTo, click }) => {
+      reset();
+      $("c-low").textContent = "Low Cut → 80 Hz";
+      user(PLUGIN_Q);
+      const c = card(PLUGIN_CARD);
+      cardState(c, { cur: 0, btn: "Run", hint: "Press ↵ to run<br>Press any key to stop" });
+      await wait(1500);
+      await moveTo(sceneXY(c.querySelector(".act")));
+      await click(c.querySelector(".act"));
+      focusOutput(true);
+      const running = { hint: "Press any key to stop", status: "Running — hands off for a moment" };
+      cardState(c, { cur: 0, ...running }); on("w-eq"); await wait(800);
+      cardState(c, { cur: 1, ...running }); $("eq-after").style.opacity = "1"; on("c-low"); await wait(900);
+      cardState(c, { cur: 2, ...running }); await wait(500);
+      cardState(c, { cur: 3, ...running }); on("c-shelf"); await wait(phone ? 1500 : 900);
+      cardState(c, { cur: 3, btn: "Revert", hint: "Press ↵ to revert", status: "Done" });
+      holdOutput(true);
+      cursor.classList.remove("on");
+      await wait(1200);
+      const b = c.querySelector(".act");
+      await moveTo(sceneXY(b));
+      await click(b);
+      holdOutput(false);
+      const going = { btn: "Revert", off: true, hint: null, status: "Reverting — hands off for a moment" };
+      cardState(c, { cur: 3, ...going }); await wait(500); on("c-shelf", false); await wait(800);
+      on("c-low", false); $("eq-after").style.opacity = "0"; await wait(800);
+      on("w-eq", false); await wait(500);
+      focusOutput(false);
+      cardState(c, { cur: 3, hint: null, status: "Reverted" });
+      cursor.classList.remove("on");
+    },
+    3: async ({ wait }) => {
+      for (let n = 0; n < ACTIONS.length; n++) {
+        const i = (pick[3] + n) % ACTIONS.length, [q, show] = ACTIONS[i];
+        reset(); await wait(400);   // the last plug-in fades where it is before Conductor comes back
+        focusOutput(false);
+        showPill($("ask-3-" + i));
+        text.classList.add("typing");
+        for (let k = 1; k <= q.length; k++) { text.textContent = q.slice(0, k); await wait(22 + Math.random() * 18); }
+        if (phone) await wait(300);
+        focusOutput(true);
+        if (show === "verb") { on("w-verb"); on("c-verb"); }
+        if (show === "eq") on("w-eq");
+        if (show === "low") { $("c-low").textContent = "Low Cut → 80 Hz"; on("w-eq"); $("eq-after").style.opacity = "1"; on("c-low"); }
+        if (show === "comp") { $("c-ratio").textContent = "Ratio → 4:1"; $("c-attack").textContent = "Attack → +10 ms"; on("w-comp"); on("c-ratio"); on("c-attack"); }
+        if (show === "master") { on("w-master"); on("c-loud"); }
+        if (show === "stems") { on("w-stems"); }
+        await wait(phone ? 2000 : 1500);
+      }
+    },
+  };
+
+  // ── navigation: scroll, dots, arrow keys, sideways swipes ──
+  const goTo = (n) => {
+    n = clamp(n, 1, STOPS);
+    const top = track.getBoundingClientRect().top + scrollY;
+    scrollTo({ top: top + n * layout.vh, behavior: reduce ? "auto" : "smooth" });
+  };
+  dots.querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => goTo(+b.dataset.go)));
+  $("scroll-cue").addEventListener("click", (e) => { e.preventDefault(); goTo(1); });
+  if ("IntersectionObserver" in window) new IntersectionObserver(([e]) => $("top-join").classList.toggle("at-cta", e.isIntersecting), { threshold: 0.4 }).observe($("join"));
+  const inStage = () => f > 0.5 && f < STOPS + 0.5 && track.getBoundingClientRect().bottom > layout.vh * 0.5;
+  addEventListener("keydown", (e) => {
+    if (!inStage() || e.target.closest("input")) return;
+    if (e.key === "ArrowRight") { e.preventDefault(); goTo(step + 1); }
+    if (e.key === "ArrowLeft") { e.preventDefault(); goTo(step - 1); }
+  });
+  // One gesture, one move. A trackpad keeps sending fading momentum after a swipe, and momentum only
+  // falls, so a new swipe shows up as movement rising again after the fall, or as a change of direction.
+  function swipeTracker(threshold, busyMs) {
+    let t = 0, lastAbs = 0, dir = 0, acc = 0, fired = false, busy = 0, firedAt = 0, peak = 0, fell = false, low = Infinity, rises = 0;
+    return (delta) => {
+      const now = performance.now(), abs = Math.abs(delta), d = Math.sign(delta), gap = now - t;
+      rises = abs > lastAbs ? rises + 1 : abs < lastAbs ? 0 : rises;
+      if (fired) {
+        peak = Math.max(peak, abs);
+        if (!fell && abs < peak * 0.7) { fell = true; low = abs; }
+        if (fell) low = Math.min(low, abs);
+      }
+      const risingAgain = fell && now > firedAt + 200 && ((rises >= 2 && abs >= Math.max(low * 1.5, low + 6)) || (abs > 40 && abs > lastAbs * 1.8));
+      const flipped = dir !== 0 && d !== 0 && d !== dir && abs >= 4;
+      if ((gap > 220 && abs >= lastAbs) || gap > 450 || flipped || risingAgain) { acc = 0; fired = false; }
+      t = now; lastAbs = abs; if (d) dir = d; acc += delta;
+      if (fired || now < busy || Math.abs(acc) < threshold) return 0;
+      fired = true; busy = now + busyMs; firedAt = now; peak = abs; fell = false; low = Infinity; rises = 0;
+      return Math.sign(acc);
+    };
+  }
+  // sideways: add up the swipe, so a slow deliberate one counts
+  const sidewaysSwipe = swipeTracker(40, 700);
+  stage.addEventListener("wheel", (e) => {
+    if (Math.abs(e.deltaX) < Math.abs(e.deltaY) * 1.5 || !inStage() || e.target.closest(".asks")) return;
+    e.preventDefault();
+    const moved = sidewaysSwipe(e.deltaX);
+    if (moved) goTo(step + moved);
+  }, { passive: false });
+  // mouse and trackpad: one gesture moves exactly one stop (stops 0-3 are the scene, 4 is the signup)
+  const verticalSwipe = swipeTracker(30, 650);
+  addEventListener("wheel", (e) => {
+    if (e.ctrlKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+    const H = layout.vh, dir = e.deltaY > 0 ? 1 : -1, last = STOPS + 1;
+    if (scrollY > last * H + 2 || (scrollY >= last * H - 2 && dir > 0)) return; // the signup section scrolls normally
+    e.preventDefault();
+    const moved = verticalSwipe(e.deltaY);
+    if (!moved) return;
+    const n = clamp(Math.round(scrollY / H) + moved, 0, last);
+    scrollTo({ top: n * H, behavior: reduce ? "auto" : "smooth" });
+  }, { passive: false });
+
+  let tx = null, ty = null;
+  stage.addEventListener("touchstart", (e) => { if (e.target.closest(".asks")) { tx = null; return; } tx = e.touches[0].clientX; ty = e.touches[0].clientY; }, { passive: true });
+  stage.addEventListener("touchend", (e) => {
+    if (tx === null || !inStage()) return;
+    const dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty; tx = null;
+    if (Math.abs(dx) > 35 && Math.abs(dx) > Math.abs(dy) * 1.5) goTo(step + (dx < 0 ? 1 : -1));
+  }, { passive: true });
+
+  let raf = 0;
+  addEventListener("scroll", () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; render(); }); }, { passive: true });
+  addEventListener("resize", measure);
+  measure();
+})();
+</script>
+
+<script src="/visit.js" defer></script>
 </body>
 </html>
