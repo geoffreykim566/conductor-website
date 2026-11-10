@@ -41,6 +41,9 @@ replacement capture must keep that size or the windows land in the wrong place.
 - **Reduced motion** turns off transitions and the loops' delays.
 - **Light (A) / dark (B) look** switch in the top bar; `?v=b` opens dark, the pick is kept per
   browser in local storage.
+- **Every footer carries Apple's trademark credit** ("Logic Pro is a trademark of Apple Inc., registered
+  in the U.S. and other countries and regions."), as Apple's third-party guidelines ask, next to
+  "Not affiliated with Apple". Keep it on any new page that names Logic Pro.
 - **The landing page has no download link** (`index.html`, waitlist since v0.4.4). Its two
   forms post to the server's `/v3/waitlist` (`api.askconductor.ai`, or `127.0.0.1:8000` when
   the page is served locally). The server answers the same for a new or repeat email, so the page
