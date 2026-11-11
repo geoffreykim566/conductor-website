@@ -41,6 +41,10 @@ replacement capture must keep that size or the windows land in the wrong place.
 - **Reduced motion** turns off transitions and the loops' delays.
 - **Light (A) / dark (B) look** switch in the top bar; `?v=b` opens dark, the pick is kept per
   browser in local storage.
+- **`privacy.html` and `download.html` copy the landing page's look:** its colour tokens (both
+  looks), font, top-bar wordmark and look switch, and footer. The switch shares the landing page's
+  storage key (`scene-look-wb`) and `?v=b`, and is set in `<head>` so a dark pick doesn't flash
+  light. A change to the landing page's tokens or footer means updating both pages.
 - **Every footer carries Apple's trademark credit** ("Logic Pro is a trademark of Apple Inc., registered
   in the U.S. and other countries and regions."), as Apple's third-party guidelines ask, next to
   "Not affiliated with Apple". Keep it on any new page that names Logic Pro.
