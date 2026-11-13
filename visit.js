@@ -20,8 +20,16 @@
     : "10000000-1000-4000-8000-100000000000".replace(/[018]/g, (c) =>
         (c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(16)));
 
+  // The visitor id renews after 13 months (privacy page), so no browser is followed longer.
+  const VID_MAX_MS = 395 * 24 * 60 * 60 * 1000;
   let vid = get("localStorage", "conductor_vid");
-  if (!vid) { vid = uuid(); set("localStorage", "conductor_vid", vid); }
+  let vidAt = +get("localStorage", "conductor_vid_at") || 0;
+  if (!vid || (vidAt && Date.now() - vidAt > VID_MAX_MS)) { vid = uuid(); vidAt = 0; }
+  // An id from before the expiry has no date: it keeps its id and starts its clock now.
+  if (!vidAt) {
+    set("localStorage", "conductor_vid", vid);
+    set("localStorage", "conductor_vid_at", String(Date.now()));
+  }
   // One visit per tab until it sits idle for 30 minutes.
   let sid = get("sessionStorage", "conductor_sid");
   const last = +get("sessionStorage", "conductor_sid_at") || 0;
