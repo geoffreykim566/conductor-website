@@ -82,7 +82,7 @@ invite). Keep it in step with the server's waitlist (`server/app/api/README.md`)
 
 
 `privacy.html` is served at `/privacy` (Cloudflare drops the `.html`). The client's setup
-disclaimer and Settings link to it (`config.PRIVACY_URL` in the client). Keep it in step with
+disclaimer and About Conductor link to it (`config.PRIVACY_URL` in the client). Keep it in step with
 the disclaimer and with what the app and server actually collect: a change to either side
 means updating both, and if it changes what users agree to, bumping the client's
 `DISCLAIMER_VERSION`. It names OpenAI and its 30-day API retention; the disclaimer only says
