@@ -74,18 +74,43 @@ which feeds the admin Website tab (`server/app/api/README.md`, Funnel). No cooki
   (`_redirects`, 302). Put these in bios and posts: the tag is the only source that survives
   in-app browsers. A new platform is a line here plus its tag in `server/app/core/channel.py`.
 - **Our own visits:** open `askconductor.ai/?notrack` once in each browser you use; `?track` undoes it.
+- **The visitor id renews after 13 months** (`conductor_vid_at`; an id from before this gets its
+  date on its next visit). EU rules want consent for anything stored on a visitor's device; the
+  user call (2026-11-13) was to keep the id, disclose it with the `?notrack` opt-out and cap
+  its life at 13 months (CNIL's audience-measurement exemption works this way) rather than add a
+  consent banner. Removing it would cost the admin's unique and new visitors and first-visit channel.
 
 ## Privacy page
 
-The "The waitlist" section covers the signup email (kept apart from usage, Resend sends the
-invite). Keep it in step with the server's waitlist (`server/app/api/README.md`).
+The "The waitlist" section covers the signup email (kept with the Mac's record since server
+migration 018, Resend sends the invite). Keep it in step with the server's waitlist (`server/app/api/README.md`).
 
 
 `privacy.html` is served at `/privacy` (Cloudflare drops the `.html`). The client's setup
-disclaimer and Settings link to it (`config.PRIVACY_URL` in the client). Keep it in step with
+disclaimer and About Conductor link to it (`config.PRIVACY_URL` in the client). Keep it in step with
 the disclaimer and with what the app and server actually collect: a change to either side
 means updating both, and if it changes what users agree to, bumping the client's
 `DISCLAIMER_VERSION`. It names OpenAI and its 30-day API retention; the disclaimer only says
 "our server" (user call 2026-10-27). "This website" describes the visit beacon: keep it in step
 with `visit.js` and the server's `visits` table. The footer on every page links Privacy and
 hello@askconductor.ai (an iCloud+ custom-domain address).
+
+## Beta terms
+
+`terms.html` (served at `/terms`, linked in every footer) holds the four beta lines the client's setup
+screen links (`config.TERMS_URL`): as is, keep backups, auto-run is at your own risk, no liability to
+the extent the law allows. User call 2026-11-13: the terms go on their own page, not in the popup
+(shorter) and not in the privacy policy (a notice, not an agreement, so its terms may not bind).
+The popup's "By clicking Continue, you agree to the Beta terms and Privacy policy", right above the
+button, is the agreement; naming the button follows the 2025 sign-in-wrap rulings. Written flat, like
+other beta terms: no reassurance, since a promise about safety would undercut the disclaimer. The
+full terms of service (usage rules, a lawyer's wording) waits for the public launch (`legal-log.md`).
+A change to these terms bumps the client's `DISCLAIMER_VERSION`.
+
+**EU and UK (user call 2026-11-13):** EU and UK people may join the beta, so the page carries
+GDPR Art. 13's items: who's responsible ("Conductor", not a person or company, until there's an
+LLC to name), the legal basis for each use, the US transfer under each provider's standard
+contractual clauses, the full rights list with a one-month answer, the right to complain, and
+deletions reaching backups within ~3 months. The EU and UK representatives (Art. 27) are
+deferred, a known gap (`legal-log.md`). None of this changes what users agree to, so no
+`DISCLAIMER_VERSION` bump.
