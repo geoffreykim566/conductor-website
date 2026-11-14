@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Beta terms — Conductor</title>
+  <script>
+    // Same look as the landing page: ?v=b or the pick kept there (scene-look-wb). Set before paint.
+    (() => {
+      let v = new URLSearchParams(location.search).get("v");
+      if (!v) { try { v = localStorage.getItem("scene-look-wb"); } catch (_) {} }
+      if (v === "b") document.documentElement.dataset.look = "b";
+    })();
+  </script>
+  <style>
+    /* Tokens and top bar from index.html; keep them in step. */
+    :root {
+      --bg: #F2EFE9;
+      --ink: #16101E;
+      --ink-soft: rgba(22, 16, 30, 0.64);
+      --line: rgba(22, 16, 30, 0.12);
+      --field: rgba(22, 16, 30, 0.05);
+      --run: #7B2CBF;
+      --link: #5B1A8C;
+      --sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      color-scheme: light;
+    }
+    :root[data-look="b"] {
+      --bg: #0A0A0C;
+      --ink: #ffffff;
+      --ink-soft: rgba(255, 255, 255, 0.68);
+      --line: rgba(255, 255, 255, 0.14);
+      --field: rgba(255, 255, 255, 0.08);
+      --run: #C77DFF;
+      --link: #D7A6FF;
+      color-scheme: dark;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; }
+    body {
+      background: var(--bg); color: var(--ink); font-family: var(--sans);
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh; display: flex; flex-direction: column;
+    }
+
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between; gap: 20px; height: 76px;
+      padding-left: max(28px, env(safe-area-inset-left, 0px)); padding-right: max(28px, env(safe-area-inset-right, 0px));
+    }
+    .wordmark { font-weight: 600; font-size: 17px; letter-spacing: -0.01em; color: inherit; text-decoration: none; }
+    .look { display: flex; flex: none; padding: 3px; gap: 2px; border-radius: 10px; border: 1px solid var(--line); background: var(--field); }
+    .look button { width: 30px; height: 30px; border: 0; border-radius: 7px; background: transparent; color: var(--ink-soft); cursor: pointer; }
+    .look button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+    .look button svg { display: block; margin: auto; }
+    .look button:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
+
+    main { width: 100%; max-width: 712px; margin: 0 auto; padding: 56px 16px 88px; }
+    h1 { margin: 0 0 12px; font-size: clamp(40px, 6vw, 72px); letter-spacing: -0.04em; line-height: 1; font-weight: 600; }
+    .updated { margin: 0 0 44px; font-size: 14px; color: var(--ink-soft); }
+    h2 { margin: 44px 0 12px; font-size: 22px; letter-spacing: -0.02em; font-weight: 600; }
+    p, li { margin: 0; font-size: 17px; line-height: 1.6; color: var(--ink-soft); }
+    p + p, ul + p { margin-top: 12px; }
+    ol + p { margin-top: 20px; }
+    ul, ol { margin: 10px 0 0; padding-left: 20px; }
+    li + li { margin-top: 10px; }
+    li::marker { color: var(--run); }
+    strong { color: var(--ink); font-weight: 600; }
+    code { font-size: 0.9em; overflow-wrap: anywhere; }
+    a { color: var(--link); text-decoration: underline; text-decoration-color: color-mix(in srgb, currentColor 35%, transparent); text-underline-offset: 3px; }
+    a:hover { text-decoration-color: currentColor; }
+
+    footer {
+      padding: 0 16px 40px; text-align: center; font-size: 13px; line-height: 1.45; color: var(--ink-soft);
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    footer a { color: var(--ink); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+    @media (max-width: 760px) { .topbar { height: 64px; } main { padding-top: 32px; } }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a href="/" class="wordmark">Conductor</a>
+    <div class="look" role="group" aria-label="Page look">
+      <button type="button" data-look="a" aria-pressed="true" title="Light mode" aria-label="Light mode"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.5 1.5M17.2 17.2l1.5 1.5M5.3 18.7l1.5-1.5M17.2 6.8l1.5-1.5"/></svg></button>
+      <button type="button" data-look="b" aria-pressed="false" title="Dark mode" aria-label="Dark mode"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 1 1 9.8 3.5a6.8 6.8 0 0 0 10.7 10.7z"/></svg></button>
+    </div>
+  </header>
+
+  <main>
+    <h1>Beta terms</h1>
+    <p class="updated">Last updated November 13, 2026</p>
+
+    <p>These terms apply when you use Conductor, an AI assistant for Logic Pro, during its beta. By clicking Continue when you set up the app, you agree to them and to the <a href="/privacy">privacy policy</a>. Questions go to <a href="mailto:hello@askconductor.ai">hello@askconductor.ai</a>.</p>
+
+    <ol>
+      <li><strong>Conductor is in beta and provided "as is"</strong>, without warranties of any kind. It may have bugs, change, or stop working at any time.</li>
+      <li><strong>Conductor makes changes in your Logic projects.</strong> You're responsible for keeping backups of your projects and anything else you care about.</li>
+      <li><strong>If you turn on auto-run</strong>, changes run without you pressing Run, and you accept that risk.</li>
+      <li><strong>To the extent the law allows, we aren't liable for lost work, lost data, or other damages</strong> from using Conductor.</li>
+    </ol>
+
+    <p>Conductor isn't meant for children under 13. If these terms change, we'll update this page.</p>
+  </main>
+
+  <footer>
+    <span><a href="/">Home</a> · <a href="/privacy">Privacy</a> · <a href="mailto:hello@askconductor.ai">hello@askconductor.ai</a></span>
+    <span>© 2026 Conductor · Not affiliated with Apple</span>
+    <span>Logic Pro is a trademark of Apple Inc., registered in the U.S. and other countries and regions.</span>
+  </footer>
+
+  <script>
+    // Look switch, shared with the landing page through the same storage key.
+    (() => {
+      const root = document.documentElement, btns = document.querySelectorAll(".look button[data-look]");
+      const sync = () => btns.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.look === (root.dataset.look === "b" ? "b" : "a"))));
+      btns.forEach((b) => b.addEventListener("click", () => {
+        if (b.dataset.look === "b") root.dataset.look = "b"; else delete root.dataset.look;
+        try { localStorage.setItem("scene-look-wb", b.dataset.look); } catch (_) {}
+        sync();
+      }));
+      sync();
+    })();
+  </script>
+  <script src="/visit.js" defer></script>
+</body>
+</html>
