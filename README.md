@@ -94,22 +94,33 @@ migration 018, Resend sends the invite). Keep it in step with the server's waitl
 disclaimer and About Conductor link to it (`config.PRIVACY_URL` in the client). Keep it in step with
 the disclaimer and with what the app and server actually collect: a change to either side
 means updating both, and if it changes what users agree to, bumping the client's
-`DISCLAIMER_VERSION`. It names OpenAI and its 30-day API retention; the disclaimer only says
-"our server" (user call 2026-10-27). "This website" describes the visit beacon: keep it in step
-with `visit.js` and the server's `visits` table. The footer on every page links Privacy and
+`DISCLAIMER_VERSION`. It names OpenAI, which keeps API data up to 30 days for abuse checks (longer
+if the law requires) and sends web research queries to its search services; the disclaimer only says
+"our server" (user call 2026-10-27). The "never stored" lines say "on our server" because OpenAI
+holds what it receives for that window (user call 2026-11-13). "This website" describes the visit
+beacon: keep it in step with `visit.js` and the server's `visits` table. The footer on every page
+links Privacy and
 hello@askconductor.ai (an iCloud+ custom-domain address).
 
 ## Beta terms
 
-`terms.html` (served at `/terms`, linked in every footer) holds the four beta lines the client's setup
+`terms.html` (served at `/terms`, linked in every footer) holds the six beta lines the client's setup
 screen links (`config.TERMS_URL`): as is, keep backups, auto-run is at your own risk, no liability to
-the extent the law allows. User call 2026-11-13: the terms go on their own page, not in the popup
-(shorter) and not in the privacy policy (a notice, not an agreement, so its terms may not bind).
+the extent the law allows, use only for your own work in Logic and lawfully, and we can limit or end
+access. The last two went in now because OpenAI's services agreement (3.3, 8.1) makes us responsible
+for what users do and requires that we can cut a user off, so they don't wait for the full terms of
+service (user call 2026-11-13). Consent stays v3, because v3 has not shipped. The terms go on their
+own page, not in the popup (shorter) and not in the privacy policy (a notice, not an agreement,
+so its terms may not bind).
 The popup's "By clicking Continue, you agree to the Beta terms and Privacy policy", right above the
 button, is the agreement; naming the button follows the 2025 sign-in-wrap rulings. Written flat, like
 other beta terms: no reassurance, since a promise about safety would undercut the disclaimer. The
 full terms of service (usage rules, a lawyer's wording) waits for the public launch (`legal-log.md`).
 A change to these terms bumps the client's `DISCLAIMER_VERSION`.
+
+The terms and the privacy page say 18 or older, not "under 13", because OpenAI's services
+agreement (3.3(c)) bars minors without a parent's consent. There is no age gate in the app; the
+click-through agreement carries it (user call 2026-11-13).
 
 **EU and UK (user call 2026-11-13):** EU and UK people may join the beta, so the page carries
 GDPR Art. 13's items: who's responsible ("Conductor", not a person or company, until there's an
