@@ -1,6 +1,10 @@
 askconductor.ai: one page, deployed from `main` to Cloudflare (`wrangler.jsonc`). Files listed
 in `.assetsignore` (`tools/`) aren't deployed.
 
+Only `main` builds: "Builds for non-production branches" is off in the Worker's settings. Until
+2026-11-13 it was on with `npx wrangler deploy` as the version command, so every pushed branch
+went live. Preview on the local stack (below), not a pushed branch.
+
 ## Previewing locally
 
 Don't open the HTML files directly (`file://`). Chrome renders the page but macOS blocks it
