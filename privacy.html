@@ -1,15 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-look="b">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Privacy — Conductor</title>
   <script>
-    // Same look as the landing page: ?v=b or the pick kept there (scene-look-wb). Set before paint.
+    // Same look as the landing page: dark by default, ?v=a or the pick kept there (scene-look-dark) opens light. Set before paint.
     (() => {
       let v = new URLSearchParams(location.search).get("v");
-      if (!v) { try { v = localStorage.getItem("scene-look-wb"); } catch (_) {} }
-      if (v === "b") document.documentElement.dataset.look = "b";
+      if (!v) { try { v = localStorage.getItem("scene-look-dark"); } catch (_) {} }
+      if (v === "a") delete document.documentElement.dataset.look;
     })();
   </script>
   <style>
@@ -48,11 +48,14 @@
       padding-left: max(28px, env(safe-area-inset-left, 0px)); padding-right: max(28px, env(safe-area-inset-right, 0px));
     }
     .wordmark { font-weight: 600; font-size: 17px; letter-spacing: -0.01em; color: inherit; text-decoration: none; }
-    .look { display: flex; flex: none; padding: 3px; gap: 2px; border-radius: 10px; border: 1px solid var(--line); background: var(--field); }
-    .look button { width: 30px; height: 30px; border: 0; border-radius: 7px; background: transparent; color: var(--ink-soft); cursor: pointer; }
-    .look button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
-    .look button svg { display: block; margin: auto; }
-    .look button:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
+    /* one look toggle, as on index.html: it shows the mode a click switches to */
+    .look { flex: none; width: 38px; height: 38px; padding: 0; display: grid; place-items: center; border-radius: 10px; cursor: pointer;
+      border: 1px solid rgba(22, 16, 30, 0.14); background: #16101E; color: #ffffff; transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease; }
+    :root[data-look="b"] .look { background: #ffffff; color: #16101E; border-color: rgba(255, 255, 255, 0.14); }
+    .look svg { display: block; }
+    .look .sun, :root[data-look="b"] .look .moon { display: none; }
+    :root[data-look="b"] .look .sun { display: block; }
+    .look:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 
     main { width: 100%; max-width: 712px; margin: 0 auto; padding: 56px 16px 88px; }
     h1 { margin: 0 0 12px; font-size: clamp(40px, 6vw, 72px); letter-spacing: -0.04em; line-height: 1; font-weight: 600; }
@@ -80,10 +83,10 @@
 <body>
   <header class="topbar">
     <a href="/" class="wordmark">Conductor</a>
-    <div class="look" role="group" aria-label="Page look">
-      <button type="button" data-look="a" aria-pressed="true" title="Light mode" aria-label="Light mode"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.5 1.5M17.2 17.2l1.5 1.5M5.3 18.7l1.5-1.5M17.2 6.8l1.5-1.5"/></svg></button>
-      <button type="button" data-look="b" aria-pressed="false" title="Dark mode" aria-label="Dark mode"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 1 1 9.8 3.5a6.8 6.8 0 0 0 10.7 10.7z"/></svg></button>
-    </div>
+    <button type="button" class="look" id="look" aria-label="Switch to light mode" title="Switch to light mode">
+      <svg class="sun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.5 1.5M17.2 17.2l1.5 1.5M5.3 18.7l1.5-1.5M17.2 6.8l1.5-1.5"/></svg>
+      <svg class="moon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 1 1 9.8 3.5a6.8 6.8 0 0 0 10.7 10.7z"/></svg>
+    </button>
   </header>
 
   <main>
@@ -160,16 +163,17 @@
   </footer>
 
   <script>
-    // Look switch, shared with the landing page through the same storage key.
+    // Look toggle, shared with the landing page through the same storage key.
     (() => {
-      const root = document.documentElement, btns = document.querySelectorAll(".look button[data-look]");
-      const sync = () => btns.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.look === (root.dataset.look === "b" ? "b" : "a"))));
-      btns.forEach((b) => b.addEventListener("click", () => {
-        if (b.dataset.look === "b") root.dataset.look = "b"; else delete root.dataset.look;
-        try { localStorage.setItem("scene-look-wb", b.dataset.look); } catch (_) {}
-        sync();
-      }));
-      sync();
+      const root = document.documentElement, btn = document.getElementById("look");
+      const label = () => { const t = root.dataset.look === "b" ? "Switch to light mode" : "Switch to dark mode"; btn.setAttribute("aria-label", t); btn.title = t; };
+      btn.addEventListener("click", () => {
+        const next = root.dataset.look === "b" ? "a" : "b";
+        if (next === "b") root.dataset.look = "b"; else delete root.dataset.look;
+        try { localStorage.setItem("scene-look-dark", next); } catch (_) {}
+        label();
+      });
+      label();
     })();
   </script>
   <script src="/visit.js" defer></script>
