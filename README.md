@@ -20,17 +20,30 @@ Then open http://127.0.0.1:8765/ (or `/privacy.html`, `/download.html`; the down
 the DMG download on arrival).
 
 The landing page is `index.html`: one Logic window pinned to the screen. A scroll grows it and
-blurs it, Conductor's panel comes out of the corner, and three stops step through (Ask anything,
-Your session your call, You create), by scroll, the dots, the arrow keys or a sideways swipe.
-Each stop plays its demo in a loop. Waitlist forms in the top bar and the closing section.
+blurs it, Conductor's panel comes out of the corner, and three stops step through (Learn as you
+create, Your session your call, Conductor does the rest), by scroll, the dots, the arrow keys or a
+sideways swipe. Each stop's pills pick a demo and the demos loop:
+- **Learn as you create:** Visual pointers (a guided Compressor run, Explain on) and Term definitions.
+- **Your session, your call:** Run and Revert (plug-in edits, a ⌘D copy, an edit on the copy) and
+  Keybind change detection (the key-commands ask, Yes, the read, the card pressing the user's key).
+- **Conductor does the rest:** example requests (Supermassive, Mastering Assistant, Stem Splitter,
+  buffer size).
+Waitlist forms in the top bar and the closing section.
 
 ## Media
 
-`media/scene/*.webp` are per-window captures from a live run on Logic Pro 13 (11-09):
-`logic-clean` is the main window behind every stop, the rest are plug-in windows
-(`eq-before`/`eq-after`, `compressor`, `verb`, `mastering`) and the Drums stem strip
-(`logic-stems`). Scene coordinates in the page are the base capture's own 1920×960 pixels, so a
-replacement capture must keep that size or the windows land in the wrong place.
+All captures are single Logic windows from live runs on Logic Pro 13, taken with the client's
+`./dev.sh capture <scene>` (client `dev/README.md` "Capturing demos"; scenes `dev/scenes/site-*.toml`).
+Scene coordinates in the page are Logic's main window's own 1920×960 pixels, so a replacement
+capture must keep that size or the windows land in the wrong place.
+- `scene/logic-clean` (11-09): the main window behind every stop. `scene/eq-*`, `scene/compressor`:
+  V15 layers the page still carries but no demo shows.
+- `s1/` (`site-stop1`, 11-15): the guided Compressor run. `main`, `frame-search`, `frame-pick` are
+  whole main-window frames (the slot menu drawn in) for the close-up; `compressor` the result.
+- `s2/` (`site-stop2`, 11-15): Run and Revert's windows as they ended, plus `eq-before` and
+  `comp-before` (the Compressor at defaults, from `site-stop1`) for the change landing.
+- `s3/` (`site-buffer`, 11-14/15): Settings > Audio at 256, with the dropdown open, and at 128.
+- `s3x/` (`site-verb`, `site-master`, `site-stems`, 11-15): each example's window before and after.
 
 `tools/encode-video.sh` is still there for clips (AV1 `.webm`, H.264 `.mp4`, `.webp` poster,
 1600 wide); the page has none today.
@@ -38,13 +51,19 @@ replacement capture must keep that size or the windows land in the wrong place.
 ## Quirks & why
 
 - **The Conductor panel is HTML, not a screenshot**, rebuilt from the app's theme tokens, so it
-  stays sharp at any zoom. Replies and cards are the app's real text from the 11-09 run, trimmed
+  stays sharp at any zoom. Replies and cards are the app's real text from the captures, trimmed
   to the app's own sentences (user call). Glossary underlines match `seed/glossary.json`.
+- **Demos happen in windows, not on the blurred Logic behind them** (user call 11-15): a window
+  opens, then its change lands with its pill. Windows stack down-right as Logic opens them. Explain
+  pointers sit on a 1.6× close-up of the strip between the bubble and the panel. Timings are faster
+  than the real runs (pointers ~5 s vs 11 s, Run and Revert ~7 s vs 16 s, its Revert 3 s vs ~20 s).
+- **The capture's menu and sheet shots hold the whole main window**, not the menu's bounds (a
+  capture-tool bug): the page uses them as full frames (the close-up) or crops them (Stem Splitter).
 - **Mouse and trackpad page one stop per gesture** (JS); touch uses CSS scroll snap. Momentum
   after a swipe is ignored until the movement rises again or changes direction.
 - **Reduced motion** turns off transitions and the loops' delays.
-- **Light (A) / dark (B) look** switch in the top bar; `?v=b` opens dark, the pick is kept per
-  browser in local storage.
+- **One look toggle** in the top bar, dark (B) by default since V15; `?v=a` opens light, the pick
+  is kept per browser in local storage (`scene-look-dark`).
 - **`privacy.html` and `download.html` copy the landing page's look:** its colour tokens (both
   looks), font, top-bar wordmark and look switch, and footer. The switch shares the landing page's
   storage key (`scene-look-wb`) and `?v=b`, and is set in `<head>` so a dark pick doesn't flash

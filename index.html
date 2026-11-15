@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-look="b">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -105,11 +105,14 @@ body {
 .join .btn:hover { background: var(--btn-hover); }
 .join .btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 .join.done input, .join.done .btn { opacity: 0.5; pointer-events: none; }
-.look { display: flex; flex: none; padding: 3px; gap: 2px; border-radius: 10px; border: 1px solid var(--glass-line); background: var(--field); }
-.look button { width: 30px; height: 30px; border: 0; border-radius: 7px; background: transparent; color: var(--ink-soft); font: 600 13px var(--sans); cursor: pointer; }
-.look button[aria-pressed="true"] { background: var(--ink); color: var(--sky-top); }
-.look button svg { display: block; margin: auto; }
-.look button:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
+/* one look toggle, showing the mode a click switches to: dark page gets a white button with a sun, light page a dark button with a moon */
+.look { flex: none; width: 38px; height: 38px; padding: 0; display: grid; place-items: center; border-radius: 10px; cursor: pointer;
+  border: 1px solid rgba(22, 16, 30, 0.14); background: #16101E; color: #ffffff; transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease; }
+:root[data-look="b"] .look { background: #ffffff; color: #16101E; border-color: rgba(255, 255, 255, 0.14); }
+.look svg { display: block; }
+.look .sun, :root[data-look="b"] .look .moon { display: none; }
+:root[data-look="b"] .look .sun { display: block; }
+.look:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 .hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
 .msg { font-size: 13px; color: var(--ink-soft); min-height: 1em; }
 .msg.err { color: var(--err); }
@@ -185,6 +188,25 @@ body {
 .tick { position: absolute; border-radius: 8px; box-shadow: 0 0 0 3px var(--run); opacity: 0; transition: opacity 0.3s ease; }
 .tick.on { opacity: 1; }
 
+/* Explain pointer, as the app's guide overlay draws it */
+.guide-ring { position: absolute; z-index: 4; border: 3px solid #9D4EDD; border-radius: 9px; opacity: 0; pointer-events: none;
+  box-shadow: 0 0 0 0 rgba(157, 78, 221, 0.55); transition: opacity 0.25s ease, left 0.3s ease, top 0.3s ease, width 0.3s ease, height 0.3s ease; }
+.guide-ring.on { opacity: 1; animation: guide-pulse 1.2s ease-out infinite; }
+@keyframes guide-pulse { from { box-shadow: 0 0 0 0 rgba(157, 78, 221, 0.55); } to { box-shadow: 0 0 0 12px rgba(157, 78, 221, 0); } }
+.guide-cap { position: absolute; z-index: 4; padding: 8px 12px; border-radius: 10px; border: 2px solid #9D4EDD; background: rgba(20, 16, 26, 0.94);
+  color: #fff; font: 600 15px/1.3 var(--sans); white-space: nowrap; opacity: 0; transition: opacity 0.25s ease; pointer-events: none; }
+.guide-cap small { display: block; font-weight: 500; font-size: 12px; color: rgba(255, 255, 255, 0.7); }
+.guide-cap.on { opacity: 1; }
+/* stop 1's close-up: a crop of Logic's main window, zoomed, in the clear space between the bubble and Conductor */
+.fw.zoom { overflow: hidden; border-radius: 14px; box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.12); }
+.zoom-inner { position: absolute; left: 0; top: 0; width: 1920px; height: 960px; transform-origin: 0 0; }
+.fw .zoom-inner img { inset: auto; }
+/* stop 2: a window's default state over its finished one, below the title bar so the track name stays its own */
+.fw img.before { clip-path: inset(5.4% 0 0 0); }
+/* the key-commands ask, the app's Yes/No row under the reply */
+.ask-note { margin-top: 8px; color: #a1a1a8; font-style: italic; }
+.cp .votes.askrow span.press { background: rgba(255, 255, 255, 0.16); border-radius: 6px; }
+
 /* ── Conductor panel, rebuilt from the app (350x500 at scale 1) ── */
 .cp {
   position: absolute; left: 0; top: 0; width: 350px; height: 500px;
@@ -246,7 +268,7 @@ body {
 
 /* pointer */
 .cursor { position: absolute; left: 0; top: 0; width: 34px; height: 34px; opacity: 0; z-index: 5;
-  transition: transform 0.8s cubic-bezier(.45,.05,.2,1), opacity 0.3s ease; pointer-events: none; }
+  transition: transform 0.5s cubic-bezier(.45,.05,.2,1), opacity 0.3s ease; pointer-events: none; }
 .cursor.on { opacity: 1; }
 .cursor svg { width: 100%; height: 100%; transition: transform 0.12s ease; transform-origin: 6px 4px; }
 .cursor.press svg { transform: scale(0.84); }
@@ -271,6 +293,9 @@ body {
 .slide.past { transform: translateX(-40px); }
 .slide .eyebrow { margin: 0 0 14px; font-size: var(--eb, 14px); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--bubble-ink-soft); }
 .slide h2 { margin: 0; font-size: var(--h, 56px); line-height: 1.02; letter-spacing: -0.03em; font-weight: 600; text-wrap: balance; }
+.slide .feats { margin: 0.8em 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 0.3em; font-size: calc(var(--b, 20px) * 0.82); line-height: 1.38; color: var(--bubble-ink-soft); max-width: 38ch; }
+.slide .feats li { position: relative; padding-left: 1.1em; }
+.slide .feats li::before { content: ""; position: absolute; left: 0.15em; top: 0.55em; width: 0.38em; height: 0.38em; border-radius: 50%; background: #9D4EDD; }
 .slide p.body { margin: 0.7em 0 0; font-size: var(--b, 20px); line-height: 1.42; color: var(--bubble-ink-soft); max-width: 34ch; }
 
 .dots {
@@ -306,7 +331,7 @@ body {
 /* center the signup block in the space above the footer */
 .cta h2 { margin-top: auto; font-size: clamp(36px, 5vw, 72px); }
 .hero-copy .title { font-size: min(15vw, 23vh); }
-.subline { margin: 0.55em 0 0; font-size: clamp(16px, 1.5vw, 22px); font-weight: 500; color: var(--ink-soft); }
+.subline { margin: 0.5em 0 0; font-size: clamp(19px, 1.9vw, 28px); font-weight: 500; color: var(--ink-soft); }
 .eyebrow-hero { margin: 0 0 10px; font-size: clamp(11px, 0.95vw, 14px); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft); }
 .tag-big { font-size: clamp(18px, 1.9vw, 28px); font-weight: 600; color: var(--ink); margin-bottom: 6px; }
 .cta form.join { width: min(560px, 100%); justify-content: center; margin-top: 8px; }
@@ -346,6 +371,7 @@ body {
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-snap-type: none; }
+  .guide-ring.on { animation: none; }
   .cp-panel, .cp-pill, .cp.glide, .fw, .chip, .slide, .cursor, .base img, .base .veil, .base .blurred { transition: none !important; }
   .pop { animation: none; }
 }
@@ -361,10 +387,10 @@ body {
     <button class="btn" type="submit">Join the waitlist</button>
   </form>
   <p class="msg" aria-live="polite"></p>
-  <div class="look" role="group" aria-label="Page look">
-    <button type="button" data-look="a" aria-pressed="true" title="Light mode" aria-label="Light mode"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.5 1.5M17.2 17.2l1.5 1.5M5.3 18.7l1.5-1.5M17.2 6.8l1.5-1.5"/></svg></button>
-    <button type="button" data-look="b" aria-pressed="false" title="Dark mode" aria-label="Dark mode"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 1 1 9.8 3.5a6.8 6.8 0 0 0 10.7 10.7z"/></svg></button>
-  </div>
+  <button type="button" class="look" id="look" aria-label="Switch to light mode" title="Switch to light mode">
+    <svg class="sun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.5 1.5M17.2 17.2l1.5 1.5M5.3 18.7l1.5-1.5M17.2 6.8l1.5-1.5"/></svg>
+    <svg class="moon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 1 1 9.8 3.5a6.8 6.8 0 0 0 10.7 10.7z"/></svg>
+  </button>
 </header>
 
 <main>
@@ -376,6 +402,7 @@ body {
       <div class="shade" id="shade"></div>
       <div class="hero-copy" id="hero">
         <h1 class="title">Conductor</h1>
+        <p class="subline">AI for music, where it belongs.</p>
       </div>
 
       <div class="scene" id="scene" aria-hidden="true">
@@ -395,8 +422,12 @@ body {
         <div class="fw" id="w-comp" style="left:640px;top:182px;width:695px;height:582px">
           <img src="media/scene/compressor.webp" alt="">
         </div>
-        <div class="fw" id="w-verb" style="left:664px;top:257px;width:634px;height:446px"><img src="media/scene/verb.webp" alt=""></div>
-        <div class="chips" id="verb-chips" style="left:681px;width:600px;top:721px"><span class="chip" id="c-verb">Supermassive · Mix → 40%</span></div>
+        <!-- last slide: each example's window as it opened, then as the card left it (dev captures 2026-11-15) -->
+        <div class="fw" id="w-verb" style="left:630px;top:220px;width:700px;height:492px">
+          <img src="media/s3x/verb-before.webp" alt="">
+          <img id="verb-after" src="media/s3x/verb-after.webp" alt="" style="opacity:0">
+        </div>
+        <div class="chips" id="verb-chips" style="left:630px;width:700px;top:728px"><span class="chip" id="c-verb">Supermassive · Mix → 60%</span></div>
         <div class="chips" id="comp-chips" style="left:687px;width:600px;top:774px">
           <span class="chip" id="c-ratio">Ratio → 2:1</span>
           <span class="chip" id="c-attack">Attack → 30 ms</span>
@@ -408,15 +439,52 @@ body {
           <span class="chip teach" id="k-attack"><b>Attack</b> · how fast it grabs</span>
           <span class="chip teach" id="k-release"><b>Release</b> · how fast it lets go</span>
         </div>
-        <div class="fw" id="w-master" style="left:602px;top:234px;width:759px;height:490px">
-          <img src="media/scene/mastering.webp" alt="">
-          <div class="chips" style="right:16px;top:44px"><span class="chip" id="c-loud">Loudness → +2 dB</span></div>
+        <div class="fw" id="w-master" style="left:630px;top:230px;width:699px;height:452px">
+          <img src="media/s3x/master-before.webp" alt="">
+          <img id="master-after" src="media/s3x/master-after.webp" alt="" style="opacity:0">
+          <div class="chips" style="left:16px;bottom:-46px"><span class="chip" id="c-loud">Mastering Assistant · Loudness → +1</span></div>
         </div>
-        <!-- just the Drums stem: its track header next to the part of the lane with audio in it -->
-        <div class="fw crop" id="w-stems" style="left:635px;top:380px;width:650px;height:66px;overflow:hidden">
-          <div style="position:absolute;left:0;top:0;width:290px;height:66px;background:url(media/scene/logic-stems.webp) -265px -233px / 1920px 960px no-repeat"></div>
-          <div style="position:absolute;left:290px;top:0;width:360px;height:66px;background:url(media/scene/logic-stems.webp) -1295px -233px / 1920px 960px no-repeat"></div>
+        <!-- Stem Splitter's sheet: opened with its last ticks, then Drums only; the card never presses Apply -->
+        <div class="fw" id="w-stems" style="left:750px;top:180px;width:460px;height:579px;border-radius:12px;overflow:hidden">
+          <img src="media/s3x/stems-before.webp" alt="">
+          <img id="stems-after" src="media/s3x/stems-after.webp" alt="" style="opacity:0">
         </div>
+        <div class="chips" id="stems-chips" style="left:630px;width:700px;top:776px"><span class="chip" id="c-stems">Stem Splitter · Drums only, ready to Apply</span></div>
+
+        <!-- stop 1: a close-up of the channel strip (main window x 0-300, y 380-940, at 1.6x) with the run's slot menus and pointers -->
+        <div class="fw zoom" id="s1-zoom" style="left:741px;top:32px;width:480px;height:896px">
+          <div class="zoom-inner" style="transform:scale(1.6) translate(0px, -380px)">
+            <img class="zf" id="zf-main" src="media/s1/main.webp" alt="" style="left:0;top:0;width:1920px;height:960px">
+            <img class="zf" id="zf-frame-search" src="media/s1/frame-search.webp" alt="" style="left:0;top:0;width:1920px;height:960px;opacity:0">
+            <img class="zf" id="zf-frame-pick" src="media/s1/frame-pick.webp" alt="" style="left:0;top:0;width:1920px;height:960px;opacity:0">
+            <div class="guide-ring" id="g-ring"></div>
+            <div class="guide-cap" id="g-cap"><span id="g-text"></span></div>
+          </div>
+        </div>
+        <div class="fw" id="s1-comp" style="left:593px;top:245px;width:772px;height:646px"><img src="media/s1/compressor.webp" alt=""></div>
+        <!-- stop 2: the current track's Channel EQ and DeEsser 2 (68%), in the clear space between the bubble and Conductor -->
+        <div class="fw" id="s2-eq" style="left:600px;top:110px;width:933px;height:500px">
+          <img src="media/s2/eq.webp" alt="">
+          <img id="s2-eq-before" src="media/s2/eq-before.webp" alt="">
+          <div class="chips" style="left:20px;bottom:64px"><span class="chip" id="c-s2-low">Low Cut → 80 Hz</span></div>
+        </div>
+        <div class="fw" id="s2-de" style="left:630px;top:140px;width:496px;height:356px">
+          <img src="media/s2/de.webp" alt="">
+          <div class="chips" style="left:16px;bottom:44px"><span class="chip" id="c-s2-de">DeEsser 2 added</span></div>
+        </div>
+        <div class="fw" id="s2-comp" style="left:660px;top:170px;width:695px;height:581px">
+          <img src="media/s2/comp.webp" alt="">
+          <img id="s2-comp-before" src="media/s2/comp-before.webp" alt="">
+          <div class="chips" style="left:20px;bottom:44px"><span class="chip" id="c-s2-thr">Copy · Threshold → −23 dB</span></div>
+        </div>
+        <div class="chips" id="s2-copy-chips" style="left:600px;width:933px;top:62px;justify-content:flex-start"><span class="chip teach" id="c-s2-copy"><b>⌘D</b> · copy of Audio 1, with its plug-ins</span></div>
+        <!-- stop 3: Settings > Audio, the buffer dropdown, then 128 -->
+        <div class="fw" id="s3-set" style="left:582px;top:92px;width:750px;height:587px">
+          <img id="s3-256" src="media/s3/settings-256.webp" alt="">
+          <img id="s3-open" src="media/s3/settings-open.webp" alt="" style="opacity:0">
+          <img id="s3-128" src="media/s3/settings-128.webp" alt="" style="opacity:0">
+        </div>
+        <div class="chips" id="s3-chips" style="left:582px;width:750px;top:700px"><span class="chip" id="c-buffer">I/O Buffer Size → 128</span></div>
 
         <!-- Conductor -->
         <div class="cp" id="cp">
@@ -445,13 +513,15 @@ body {
 
       <div class="bubble" id="bubble">
         <div class="slides" id="slides">
-          <div class="slide" data-step="1"><h2>Ask anything.</h2><p class="body">Concise answers to any question, with technical terms defined in a click.</p>
+          <div class="slide" data-step="1"><h2>Learn as you create.</h2><p class="body">Explain mode gives concise answers to any question, with technical terms defined in a click. Visual pointers walk you through menu paths and settings.</p>
             <div class="asks" id="asks-1"></div>
           </div>
-          <div class="slide" data-step="3"><h2>You create. Conductor does the rest.</h2><p class="body">Manage stock and third-party plug-ins, and find buried settings, just by asking.</p>
+          <div class="slide" data-step="3"><h2>Conductor does the rest.</h2><p class="body">Manage native and third-party plug-ins, find buried settings, and more.</p>
             <div class="asks" id="asks-3"></div>
           </div>
-          <div class="slide" data-step="2"><h2>Your session, your call.</h2><p class="body">Conductor shows you every change first; one click reverts the action.</p></div>
+          <div class="slide" data-step="2"><h2>Your session, your call.</h2><p class="body">Conductor shows you every change first; one click reverts the action. Keybind changes are detected before anything runs.</p>
+            <div class="asks" id="asks-2"></div>
+          </div>
         </div>
       </div>
 
@@ -460,9 +530,9 @@ body {
       </a>
 
       <nav class="dots" id="dots" aria-label="Features">
-        <button type="button" data-go="1" aria-label="Ask anything"></button>
-        <button type="button" data-go="2" aria-label="Your call"></button>
-        <button type="button" data-go="3" aria-label="You create"></button>
+        <button type="button" data-go="1" aria-label="Learn as you create"></button>
+        <button type="button" data-go="2" aria-label="Your session, your call"></button>
+        <button type="button" data-go="3" aria-label="Conductor does the rest"></button>
       </nav>
     </div>
   </section>
@@ -485,17 +555,22 @@ body {
 </main>
 
 <script>
-// A/B look switch. ?v=b opens B; the last pick is remembered in this browser.
+// Look toggle: dark (B) by default; ?v=a opens light. The last pick is remembered in this browser.
 (() => {
-  const root = document.documentElement, btns = document.querySelectorAll(".look button[data-look]");
+  const root = document.documentElement, btn = document.getElementById("look");
   const set = (v) => {
-    if (v === "b") root.dataset.look = "b"; else delete root.dataset.look;
-    btns.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.look === (v === "b" ? "b" : "a"))));
+    const dark = v !== "a";
+    if (dark) root.dataset.look = "b"; else delete root.dataset.look;
+    const label = dark ? "Switch to light mode" : "Switch to dark mode";
+    btn.setAttribute("aria-label", label); btn.title = label;
   };
   let v = new URLSearchParams(location.search).get("v");
-  if (!v) { try { v = localStorage.getItem("scene-look-wb"); } catch (_) {} }
-    set(v);
-  btns.forEach((b) => b.addEventListener("click", () => { set(b.dataset.look); try { localStorage.setItem("scene-look-wb", b.dataset.look); } catch (_) {} }));
+  if (!v) { try { v = localStorage.getItem("scene-look-dark"); } catch (_) {} }
+  set(v);
+  btn.addEventListener("click", () => {
+    const next = root.dataset.look === "b" ? "a" : "b";
+    set(next); try { localStorage.setItem("scene-look-dark", next); } catch (_) {}
+  });
 })();
 
 // Waitlist signup, same as preview.html. Same answer for a new or repeat email.
@@ -567,7 +642,8 @@ body {
   // Phone layout. "a": plug-in on top, Conductor under it. "b": bigger Conductor, plug-in tucked behind it.
   const PHONE = "b";
   const DESK_FEAT = PANEL.feat.slice();
-  const PLACED = ["w-eq", "w-comp", "w-verb", "w-master", "w-stems", "comp-chips", "verb-chips"];
+  const WINDOWS = ["w-verb", "w-master", "w-stems", "s1-zoom", "s1-comp", "s2-eq", "s2-de", "s2-comp", "s3-set"];
+  const PLACED = ["w-eq", "w-comp", "comp-chips", "verb-chips", ...WINDOWS];
   const deskStyle = Object.fromEntries(PLACED.map((id) => [id, { left: $(id).style.left, top: $(id).style.top, width: $(id).style.width }]));
   const CHIP_SCALE = 11 / 17;   // chips read at 11px on a phone, whatever the window behind them is scaled to
   let phone = null, focus = false;   // focus: Conductor faded out, the plug-ins get the whole area
@@ -589,7 +665,7 @@ body {
     const stacked = PHONE === "a", chips = $("comp-chips").style;
     if (focus) {
       const whole = { x: 12, y: y0, w: vw - 24, h: R }, room = R - 38;
-      ["w-verb", "w-master", "w-stems"].forEach((id) => fit(id, whole, true));
+      WINDOWS.forEach((id) => fit(id, whole, true));
       const eqBox = both ? { ...whole, h: room * 0.45 } : whole;
       const kq = fit("w-eq", eqBox, true);
       fit("w-comp", both ? { ...whole, y: y0 + room * 0.45 + 8, h: room * 0.55 } : whole, true);
@@ -600,7 +676,7 @@ body {
       return;
     }
     const box = stacked ? { x: 12, y: y0, w: vw - 24, h: zone } : { x: 12, y: y0, w: vw * 0.6, h: R * 0.5 };
-    ["w-verb", "w-master", "w-stems"].forEach((id) => fit(id, box, stacked));
+    WINDOWS.forEach((id) => fit(id, box, stacked));
     let keq;
     if (both && stacked) {
       const h = zone - 30, eqW = (vw - 32) * 0.58;
@@ -778,10 +854,27 @@ body {
     $(id).classList.toggle("on", v);
     if (phone && (id === "w-eq" || id === "w-comp")) placeWindows();
   };
-  const allLayers = ["w-eq", "w-comp", "w-verb", "w-master", "w-stems", "c-low", "c-shelf", "c-verb", "c-loud", "c-ratio", "c-attack", "c-release", "k-thr", "k-ratio", "k-attack", "k-release"];
+  const allLayers = ["w-eq", "w-comp", "w-verb", "w-master", "w-stems", "c-low", "c-shelf", "c-verb", "c-loud", "c-stems", "c-ratio", "c-attack", "c-release", "k-thr", "k-ratio", "k-attack", "k-release",
+    "s1-zoom", "s1-comp", "s2-eq", "s2-de", "s2-comp", "c-s2-low", "c-s2-de", "c-s2-thr", "c-s2-copy", "s3-set", "c-buffer"];
+  // Explain pointer at a rect inside Logic's main window (scene pixels), caption under it like the app's
+  function zoomFrame(name) {
+    document.querySelectorAll(".zf").forEach((im) => { im.style.opacity = im.id === "zf-" + name ? "1" : "0"; });
+  }
+  function guide(rect, step, text) {
+    const ring = $("g-ring"), cap = $("g-cap");
+    if (!rect) { ring.classList.remove("on"); cap.classList.remove("on"); return; }
+    const [x, y, w, h] = rect, pad = 4;
+    if (!ring.classList.contains("on")) { ring.style.transition = "none"; cap.style.transition = "none"; }
+    Object.assign(ring.style, { left: x - pad + "px", top: y - pad + "px", width: w + pad * 2 + "px", height: h + pad * 2 + "px" });
+    $("g-text").textContent = text;
+    Object.assign(cap.style, { left: Math.max(4, x - 14) + "px", top: y + h + pad + 10 + "px" });
+    void ring.offsetWidth;
+    ring.style.transition = ""; cap.style.transition = "";
+    ring.classList.add("on"); cap.classList.add("on");
+  }
   let baseShown = "a";
   function setBase(name) {
-    const src = `media/scene/${name}.webp`;
+    const src = name.includes("/") ? `media/${name}.webp` : `media/scene/${name}.webp`;
     const a = $("base-a"), b = $("base-b");
     const [show, hide] = baseShown === "a" ? [b, a] : [a, b];
     if ((baseShown === "a" ? a : b).getAttribute("src") === src) return;
@@ -792,6 +885,13 @@ body {
     allLayers.forEach((id) => on(id, false));
     document.querySelectorAll(".ask.on").forEach((el) => el.classList.remove("on"));
     $("eq-after").style.opacity = "0";
+    $("s3-128").style.opacity = "0";
+    $("s2-eq-before").style.opacity = "1";
+    $("s2-comp-before").style.opacity = "1";
+    $("s3-open").style.opacity = "0";
+    ["verb-after", "master-after", "stems-after"].forEach((id) => { $(id).style.opacity = "0"; });
+    zoomFrame("main");
+    guide(null);
     cursor.classList.remove("on");
     clearPanel(); setBase(base);
   }
@@ -809,8 +909,8 @@ body {
     const wait = (ms) => new Promise((r) => setTimeout(r, reduce ? 0 : ms)).then(() => { if (id !== run) throw STOP; });
     const type = async (q) => {
       text.classList.add("typing");
-      for (let i = 1; i <= q.length; i++) { text.textContent = q.slice(0, i); await wait(32 + Math.random() * 30); }
-      await wait(350); text.textContent = ""; text.classList.remove("typing"); user(q);
+      for (let i = 1; i <= q.length; i++) { text.textContent = q.slice(0, i); await wait(18 + Math.random() * 16); }
+      await wait(250); text.textContent = ""; text.classList.remove("typing"); user(q);
     };
     const think = async (ms = 1100) => {
       const t = add('<span class="thinking">Thinking…</span>', "r"), box = $("cp-input");
@@ -818,7 +918,7 @@ body {
       await wait(ms);
       t.remove(); text.dataset.ph = "Ask anything about Logic Pro…"; box.classList.remove("busy");
     };
-    const moveTo = async (xy, ms = 850) => {
+    const moveTo = async (xy, ms = 550) => {
       cursor.classList.add("on");
       cursor.style.transform = `translate(${xy[0] - 6}px, ${xy[1] - 4}px)`;
       await wait(ms);
@@ -847,24 +947,21 @@ body {
   }
 
   const QUESTIONS = [
+    { label: "Visual pointers", q: "teach me how to use the compressor", guided: true,
+      a: 'A compressor turns down the loudest moments, making the volume more even and sometimes adding <span class="term">punch</span>. Press Run to try Logic’s Compressor on your selected first track. To add it manually, click an empty Audio FX slot in the left <span class="term">channel strip</span>.',
+      term: "Channel strip", def: "The column of controls for one track: its volume fader, pan, plug-in slots and sends. Everything the track's sound passes through on its way out." },
     // Each answer underlines what the server's glossary (seed/glossary.json) would, with its set definition.
-    { label: "How do I reduce muddiness in my vocals?", q: "how do i reduce muddiness in my vocals?",
-      a: 'Muddy vocals usually have too much low-mid energy—the frequencies around 200–400 Hz that can make a voice sound boxy or cloudy. Make a broad, gentle cut around 250–350 Hz, starting at −2 to −3 <span class="term">dB</span>.',
-      term: "Decibel", def: "The unit for level and loudness. Small moves of 1-3 dB are often enough; about 10 dB louder sounds roughly twice as loud." },
-    { label: "What is latency?", q: "what is latency?",
-      a: 'Latency is the delay between making a sound and hearing it through Logic—for example, singing into a microphone and hearing your voice slightly late in your headphones. Logic’s <span class="term">I/O buffer size</span>—the amount of audio it processes at once—affects this: smaller settings reduce latency but make the computer work harder.',
-      term: "Buffer size", def: "How much audio your Mac works on at a time. Smaller means less delay when you play or sing, but works the computer harder; use small while recording and larger while mixing." },
-    { label: "How does a de-esser work?", q: "how does a de-esser work?",
+    { label: "Term definitions", q: "how does a de-esser work?",
       a: 'A de-esser reduces harsh “s” and “sh” sounds in vocals without turning down the whole performance. The detection frequency tells it where to listen, and the <span class="term">threshold</span> sets how strong that sound must be before it reacts.',
       term: "Threshold", def: "The level where a compressor starts working. Anything louder than the threshold gets turned down; anything quieter passes through untouched." },
   ];
   const ACTIONS = [
     ["Add Valhalla Supermassive and raise the mix", "verb"],
-    ["Set compressor ratio to 4 and raise attack", "comp"],
     ["Turn up loudness a bit", "master"],
     ["Give me just the drums from this file", "stems"],
+    ["Set the buffer size to 128", "settings"],
   ];
-  const pick = { 1: 0, 3: 0 };
+  const pick = { 1: 0, 2: 0, 3: 0 };
   const showPill = (el) => {
     el.classList.add("on");
     const row = el.parentElement;
@@ -878,12 +975,103 @@ body {
   });
   pills(1, QUESTIONS.map((c) => c.label));
   pills(3, ACTIONS.map((a) => a[0]));
+  pills(2, ["Run and Revert", "Keybind change detection"]);
 
-  const PLUGIN_Q = "cut the rumble under 80 Hz and reduce airiness by a little";
-  const PLUGIN_CARD = {
-    text: 'I’ll use Channel <span class="term">EQ</span> to cut rumble below 80 Hz and gently reduce airiness with a 2 <span class="term">dB</span> high-shelf cut at 10 kHz.',
-    steps: [["Press <b>⌃⌘P</b>", "Type <b>Channel EQ</b>", "Press <b>Return</b>"], "Channel EQ · Low Cut Frequency → <b>80</b>", "Channel EQ · High Shelf Frequency → <b>10000</b>", "Channel EQ · High Shelf Gain → <b>-2</b>"],
+  const S1_CARD = { text: "", steps: [["Select track 1 (Audio 1)", "Click an empty Audio FX slot", "Search Compressor", "Pick Compressor"]] };
+  const S1_POINTERS = [   // dev capture site-stop1 2026-11-15: in_main rects, times from Run
+    { t: 0.3, rect: [22, 493, 72, 22], text: "Click an empty Audio FX slot" },
+    { t: 1.9, rect: [27, 432, 222, 27], text: "Search Compressor", frame: "frame-search" },
+    { t: 3.5, rect: [23, 536, 230, 22], text: "Pick Compressor", frame: "frame-pick" },
+  ];
+  const S1_DONE = 5.3;   // compressed: the captured run took 11 s (most of it waiting on Logic's slot menu)
+  // stop 2: the card's 12 steps and when each started (s from Run), from dev capture site-stop2 2026-11-15 (real speed)
+  // stop 2, "Run and Revert": dev capture site-stop2 2026-11-15_014031 (real run 16 s from Run; shown about 2.5x faster)
+  const S2_Q = "add a low cut at 80 Hz and a de-esser, then make a copy with a compressor at threshold -23 as well";
+  const S2_REPLY = "The original will get an 80 Hz low cut and DeEsser 2; the copied track will also get a compressor with its threshold at −23 dB.";
+  const S2_CARD = { text: S2_REPLY, steps: [
+    ["Click an empty Audio FX slot", "Search Channel EQ", "Pick Channel EQ"],
+    "Channel EQ · Low Cut Frequency → <b>80</b>",
+    ["Click an empty Audio FX slot", "Search DeEsser 2", "Pick DeEsser 2"],
+    "Press <b>⌘D</b>",
+    ["Click an empty Audio FX slot", "Search Compressor", "Pick Compressor"],
+    "Compressor · Threshold → <b>-23</b>",
+  ] };
+  // ms from Run: [card step k starts, what shows]. Each window comes up, then its change lands with its pill.
+  const S2_EVENTS = [
+    [0, 0, null],
+    [1500, 1, () => on("s2-eq")],                                                        // Channel EQ, at its defaults
+    [2300, 2, () => { $("s2-eq-before").style.opacity = "0"; on("c-s2-low"); }],         // low cut lands
+    [3700, 3, () => { on("s2-de"); on("c-s2-de"); }],                                     // DeEsser 2 added
+    [4000, 4, () => on("c-s2-copy")],                                                    // ⌘D: the copy
+    [5500, 5, () => on("s2-comp")],                                                      // Compressor on the copy
+    [6300, 5, () => { $("s2-comp-before").style.opacity = "0"; on("c-s2-thr"); }],        // threshold to -23
+  ];
+  const S2_DONE_MS = 6900;
+  const S2_REVERT_MS = 3000;   // compressed: the real Revert took about 20 s
+  ["s3x/verb-after", "s3x/master-after", "s3x/stems-after", "s1/main", "s1/frame-search", "s1/frame-pick", "s1/compressor", "s3/settings-open", "s3/settings-128", "s2/eq-before", "s2/eq", "s2/de", "s2/comp", "s2/comp-before"]
+    .forEach((n) => { const im = new Image(); im.src = `media/${n}.webp`; });
+  // stop 2, "Keybind check": dev capture site-keys 2026-11-15, Logic's key commands on the Pro Tools preset
+  const KEYS = {
+    q: "open the mixer",
+    reply: "The Mixer gives you the track levels, routing, and plug-ins in one view.",
+    ask: "Your key commands look changed. Conductor wants to read them again.",
+    read: "Read 23 key commands.",
+    readMs: 600,
+    card: { text: "The Mixer gives you the track levels, routing, and plug-ins in one view.", steps: ["Press <b>⌘=</b>"] },
   };
+  // stop 2, "Run and Revert": dev capture site-stop2 2026-11-15
+  async function runRevert({ wait, moveTo, click }) {
+    user(S2_Q);
+    const c = card(S2_CARD);
+    cardState(c, { cur: 0, btn: "Run", hint: "Press ↵ to run<br>Press any key to stop" });
+    await wait(900);
+    await moveTo(sceneXY(c.querySelector(".act")));
+    await click(c.querySelector(".act"));
+    cursor.classList.remove("on");
+    focusOutput(true);
+    const running = { hint: "Press any key to stop", status: "Running — hands off for a moment" };
+    let at = 0;
+    for (const [ms, k, show] of S2_EVENTS) {
+      await wait(ms - at); at = ms;
+      if (show) show();
+      cardState(c, { cur: k, ...running });
+    }
+    await wait(S2_DONE_MS - at);
+    cardState(c, { cur: 5, btn: "Revert", hint: "Press ↵ to revert", status: "Done" });
+    await wait(phone ? 2200 : 1800);
+    holdOutput(true);
+    await wait(900);
+    const b = c.querySelector(".act");
+    await moveTo(sceneXY(b));
+    await click(b);
+    holdOutput(false);
+    cursor.classList.remove("on");
+    cardState(c, { cur: 5, btn: "Revert", off: true, hint: null, status: "Reverting — hands off for a moment" });
+    const gone = ["c-s2-thr", "s2-comp", "c-s2-copy", "c-s2-de", "s2-de", "c-s2-low", "s2-eq"];
+    for (const id of gone) { await wait(S2_REVERT_MS / gone.length); on(id, false); }
+    focusOutput(false);
+    cardState(c, { cur: 5, hint: null, status: "Reverted" });
+  }
+  // stop 2, "Keybind check": the ask, Yes, the read, and the card pressing the user's own key (dev capture site-keys)
+  async function keybind({ wait, type, think, moveTo, click }) {
+    await type(KEYS.q);
+    await think(1300);
+    const r = add(`<p>${KEYS.reply}</p><p class="ask-note">${KEYS.ask}</p>`, "r");
+    const row = add('<span>Yes ↩</span><i>·</i><span>No esc</span>', "votes askrow");
+    await wait(1600);
+    const yes = row.querySelector("span");
+    await moveTo(sceneXY(yes));
+    yes.classList.add("press"); await click(null); yes.classList.remove("press");
+    cursor.classList.remove("on");
+    row.remove(); r.querySelector(".ask-note").textContent = "Reading your key commands…";
+    await wait(KEYS.readMs);
+    r.querySelector(".ask-note").textContent = KEYS.read;
+    await wait(1400);
+    r.remove();
+    const c = card(KEYS.card);
+    cardState(c, { cur: 0, btn: "Run", hint: "Press ↵ to run<br>Press any key to stop" });
+    c.querySelector(".steps li").classList.add("cur");
+  }
   const timelines = {
     0: async () => { reset(); },
     1: async ({ wait, type, think, moveTo, click }) => {
@@ -900,6 +1088,34 @@ body {
         }
         await type(c.q);
         await think(1100);
+        if (c.guided) {
+          const k = card({ ...S1_CARD, text: c.a });
+          cardState(k, { cur: 0, btn: "Run", hint: "Press ↵ to run<br>Press any key to stop" });
+          await wait(2200);
+          await moveTo(sceneXY(k.querySelector(".act")));
+          await click(k.querySelector(".act"));
+          cursor.classList.remove("on");
+          focusOutput(true);
+          const running = { cur: 0, hint: "Press any key to stop", status: "Running — hands off for a moment" };
+          cardState(k, running);
+          on("s1-zoom");
+          let at = 0;
+          for (const p of S1_POINTERS) {
+            await wait((p.t - at) * 1000); at = p.t;
+            zoomFrame(p.frame || "main");
+            guide(p.rect, "", p.text);
+          }
+          await wait((S1_DONE - at) * 1000 - 600);
+          guide(null);
+          on("s1-zoom", false);
+          await wait(600);
+          on("s1-comp");
+          cardState(k, { cur: -1, btn: "Revert", hint: "Press ↵ to revert", status: "Done" });
+          await wait(phone ? 3500 : 4200);
+          focusOutput(false);
+          await wait(1000);
+          continue;
+        }
         const d = add(`<p>${c.a}</p>`, "r");
         add(VOTES, "votes");
         await wait(1400);
@@ -917,36 +1133,13 @@ body {
         await wait(700);
       }
     },
-    2: async ({ wait, moveTo, click }) => {
-      reset();
-      $("c-low").textContent = "Low Cut → 80 Hz";
-      user(PLUGIN_Q);
-      const c = card(PLUGIN_CARD);
-      cardState(c, { cur: 0, btn: "Run", hint: "Press ↵ to run<br>Press any key to stop" });
-      await wait(1500);
-      await moveTo(sceneXY(c.querySelector(".act")));
-      await click(c.querySelector(".act"));
-      focusOutput(true);
-      const running = { hint: "Press any key to stop", status: "Running — hands off for a moment" };
-      cardState(c, { cur: 0, ...running }); on("w-eq"); await wait(800);
-      cardState(c, { cur: 1, ...running }); $("eq-after").style.opacity = "1"; on("c-low"); await wait(900);
-      cardState(c, { cur: 2, ...running }); await wait(500);
-      cardState(c, { cur: 3, ...running }); on("c-shelf"); await wait(phone ? 1500 : 900);
-      cardState(c, { cur: 3, btn: "Revert", hint: "Press ↵ to revert", status: "Done" });
-      holdOutput(true);
-      cursor.classList.remove("on");
-      await wait(1200);
-      const b = c.querySelector(".act");
-      await moveTo(sceneXY(b));
-      await click(b);
-      holdOutput(false);
-      const going = { btn: "Revert", off: true, hint: null, status: "Reverting — hands off for a moment" };
-      cardState(c, { cur: 3, ...going }); await wait(500); on("c-shelf", false); await wait(800);
-      on("c-low", false); $("eq-after").style.opacity = "0"; await wait(800);
-      on("w-eq", false); await wait(500);
-      focusOutput(false);
-      cardState(c, { cur: 3, hint: null, status: "Reverted" });
-      cursor.classList.remove("on");
+    2: async (h) => {
+      for (let n = 0; n < 2; n++) {
+        const i = (pick[2] + n) % 2;
+        reset(); showPill($("ask-2-" + i)); await h.wait(400);
+        await (i === 0 ? runRevert(h) : keybind(h));
+        await h.wait(2600);
+      }
     },
     3: async ({ wait }) => {
       for (let n = 0; n < ACTIONS.length; n++) {
@@ -955,15 +1148,20 @@ body {
         focusOutput(false);
         showPill($("ask-3-" + i));
         text.classList.add("typing");
-        for (let k = 1; k <= q.length; k++) { text.textContent = q.slice(0, k); await wait(22 + Math.random() * 18); }
+        for (let k = 1; k <= q.length; k++) { text.textContent = q.slice(0, k); await wait(14 + Math.random() * 10); }
         if (phone) await wait(300);
         focusOutput(true);
-        if (show === "verb") { on("w-verb"); on("c-verb"); }
+        if (show === "verb") { on("w-verb"); await wait(900); $("verb-after").style.opacity = "1"; on("c-verb"); }
         if (show === "eq") on("w-eq");
         if (show === "low") { $("c-low").textContent = "Low Cut → 80 Hz"; on("w-eq"); $("eq-after").style.opacity = "1"; on("c-low"); }
         if (show === "comp") { $("c-ratio").textContent = "Ratio → 4:1"; $("c-attack").textContent = "Attack → +10 ms"; on("w-comp"); on("c-ratio"); on("c-attack"); }
-        if (show === "master") { on("w-master"); on("c-loud"); }
-        if (show === "stems") { on("w-stems"); }
+        if (show === "master") { on("w-master"); await wait(900); $("master-after").style.opacity = "1"; on("c-loud"); }
+        if (show === "stems") { on("w-stems"); await wait(900); $("stems-after").style.opacity = "1"; on("c-stems"); }
+        if (show === "settings") {
+          on("s3-set"); await wait(1100);
+          $("s3-open").style.opacity = "1"; await wait(1700);
+          $("s3-128").style.opacity = "1"; $("s3-open").style.opacity = "0"; on("c-buffer");
+        }
         await wait(phone ? 2000 : 1500);
       }
     },
@@ -1040,7 +1238,6 @@ body {
   measure();
 })();
 </script>
-
 <script src="/visit.js" defer></script>
 </body>
 </html>
