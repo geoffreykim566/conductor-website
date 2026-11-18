@@ -61,6 +61,11 @@ capture must keep that size or the windows land in the wrong place.
   capture-tool bug): the page uses them as full frames (the close-up) or crops them (Stem Splitter).
 - **Mouse and trackpad page one stop per gesture** (JS); touch uses CSS scroll snap. Momentum
   after a swipe is ignored until the movement rises again or changes direction.
+- **On touch screens Logic's grow (main view → first slide) is a timed transition** (0.7 s, starts as
+  the scroll heads down, reverses as it heads up), not tied to the finger like on desktop. iOS Safari
+  scrolls on its own thread, so a transform set from JS on each scroll frame lands late and stutters;
+  A/B on an iPhone (11-18) showed every other change (no blur, no shadows, no panel, a bare picture,
+  even no grow at all) still lagged. Snap already lands a touch scroll on a stop, so little is lost.
 - **Reduced motion** turns off transitions and the loops' delays.
 - **One look toggle** in the top bar, dark (B) by default since V15; `?v=a` opens light, the pick
   is kept per browser in local storage (`scene-look-dark`).
