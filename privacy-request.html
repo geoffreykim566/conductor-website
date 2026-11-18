@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en" data-look="b">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Privacy request — Conductor</title>
+  <!-- Linked from the privacy page and the confirm email. The link carries a one-time token: keep it out of search and referrers. -->
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="referrer" content="no-referrer" />
+  <script>
+    // Same look as the landing page: dark by default, ?v=a or the pick kept there (scene-look-dark) opens light. Set before paint.
+    (() => {
+      let v = new URLSearchParams(location.search).get("v");
+      if (!v) { try { v = localStorage.getItem("scene-look-dark"); } catch (_) {} }
+      if (v === "a") delete document.documentElement.dataset.look;
+    })();
+  </script>
+  <style>
+    /* Tokens and top bar from index.html; keep them in step. */
+    :root {
+      --bg: #F2EFE9;
+      --ink: #16101E;
+      --ink-soft: rgba(22, 16, 30, 0.64);
+      --line: rgba(22, 16, 30, 0.12);
+      --field: rgba(22, 16, 30, 0.05);
+      --run: #7B2CBF;
+      --link: #5B1A8C;
+      --btn: #5B1A8C;
+      --btn-hover: #6E22A8;
+      --err: #B3261E;
+      --sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      color-scheme: light;
+    }
+    :root[data-look="b"] {
+      --bg: #0A0A0C;
+      --ink: #ffffff;
+      --ink-soft: rgba(255, 255, 255, 0.68);
+      --line: rgba(255, 255, 255, 0.14);
+      --field: rgba(255, 255, 255, 0.08);
+      --run: #C77DFF;
+      --link: #D7A6FF;
+      --err: #FF8A80;
+      color-scheme: dark;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; }
+    body {
+      background: var(--bg); color: var(--ink); font-family: var(--sans);
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh; display: flex; flex-direction: column;
+    }
+
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between; gap: 20px; height: 76px;
+      padding-left: max(28px, env(safe-area-inset-left, 0px)); padding-right: max(28px, env(safe-area-inset-right, 0px));
+    }
+    .wordmark { font-weight: 600; font-size: 17px; letter-spacing: -0.01em; color: inherit; text-decoration: none; }
+    /* one look toggle, as on index.html: it shows the mode a click switches to */
+    .look { flex: none; width: 38px; height: 38px; padding: 0; display: grid; place-items: center; border-radius: 10px; cursor: pointer;
+      border: 1px solid rgba(22, 16, 30, 0.14); background: #16101E; color: #ffffff; transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease; }
+    :root[data-look="b"] .look { background: #ffffff; color: #16101E; border-color: rgba(255, 255, 255, 0.14); }
+    .look svg { display: block; }
+    .look .sun, :root[data-look="b"] .look .moon { display: none; }
+    :root[data-look="b"] .look .sun { display: block; }
+    .look:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+    main { width: 100%; max-width: 712px; margin: 0 auto; padding: 56px 16px 88px; }
+    h1 { margin: 0 0 20px; font-size: clamp(40px, 6vw, 72px); letter-spacing: -0.04em; line-height: 1; font-weight: 600; }
+    p { margin: 0; font-size: 17px; line-height: 1.6; color: var(--ink-soft); }
+    p + p { margin-top: 12px; }
+    a { color: var(--link); text-decoration: underline; text-decoration-color: color-mix(in srgb, currentColor 35%, transparent); text-underline-offset: 3px; }
+    a:hover { text-decoration-color: currentColor; }
+    [hidden] { display: none !important; }
+
+    form { margin-top: 28px; display: flex; flex-direction: column; gap: 12px; }
+    label { font-size: 15px; font-weight: 600; color: var(--ink); }
+    input[type=email] {
+      width: 100%; height: 52px; padding: 0 18px; border-radius: 12px; border: 1px solid var(--line);
+      background: var(--field); color: var(--ink); font: 16px var(--sans);
+    }
+    input[type=email]::placeholder { color: var(--ink-soft); opacity: 0.7; }
+    input[type=email]:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 4px; }
+    .btn {
+      height: 52px; padding: 0 24px; border-radius: 12px; border: 1px solid var(--line);
+      background: var(--btn); color: #fff; font: 600 16px var(--sans); cursor: pointer;
+    }
+    .btn:hover:not(:disabled) { background: var(--btn-hover); }
+    .btn.alt { background: transparent; color: var(--ink); }
+    .btn.alt:hover:not(:disabled) { background: var(--field); }
+    .btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+    .btn:disabled { opacity: 0.5; cursor: default; }
+    .msg { margin-top: 16px; font-size: 16px; line-height: 1.5; color: var(--ink); }
+    .msg.err { color: var(--err); }
+    .note { margin-top: 36px; font-size: 15px; }
+    .card { margin-top: 24px; }
+
+    footer {
+      padding: 0 16px 40px; text-align: center; font-size: 13px; line-height: 1.45; color: var(--ink-soft);
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    footer a { color: var(--ink); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+    @media (max-width: 760px) { .topbar { height: 64px; } main { padding-top: 32px; } }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a href="/" class="wordmark">Conductor</a>
+    <button type="button" class="look" id="look" aria-label="Switch to light mode" title="Switch to light mode">
+      <svg class="sun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.5 1.5M17.2 17.2l1.5 1.5M5.3 18.7l1.5-1.5M17.2 6.8l1.5-1.5"/></svg>
+      <svg class="moon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 1 1 9.8 3.5a6.8 6.8 0 0 0 10.7 10.7z"/></svg>
+    </button>
+  </header>
+
+  <main>
+    <!-- Request: no ?t= -->
+    <section id="request" hidden>
+      <h1>Privacy request</h1>
+      <p>Stop sharing usage and error reports, or delete your data. Enter the email you joined the waitlist or set up Conductor with, and choose what you want. We'll email you a link to confirm.</p>
+      <form id="request-form" novalidate>
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" autocomplete="email" inputmode="email" placeholder="you@example.com" required />
+        <div class="actions">
+          <button type="submit" class="btn" value="opt_out">Stop sharing usage reports</button>
+          <button type="submit" class="btn alt" value="delete">Delete my data</button>
+        </div>
+      </form>
+      <p class="msg" id="request-msg" role="status" aria-live="polite"></p>
+      <p class="note">Set up Conductor before version 0.5.0? Your email may not be on file. Email <a href="mailto:hello@askconductor.ai">hello@askconductor.ai</a> with Your ID (Conductor menu → About Conductor → Your ID → Copy).</p>
+    </section>
+
+    <!-- Confirm: ?t=<token>. Never submits on load, so a link scanner can't trigger it. -->
+    <section id="confirm" hidden>
+      <h1>Confirm your request</h1>
+      <div class="actions card">
+        <button type="button" class="btn" id="confirm-btn">Confirm</button>
+      </div>
+      <p class="msg" id="confirm-msg" role="status" aria-live="polite"></p>
+      <p class="note" id="confirm-back" hidden><a href="/privacy-request">Make a new request</a></p>
+    </section>
+  </main>
+
+  <footer>
+    <span><a href="/">Home</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Beta terms</a> · <a href="mailto:hello@askconductor.ai">hello@askconductor.ai</a></span>
+    <span>© 2026 Conductor · Not affiliated with Apple</span>
+    <span>Logic Pro is a trademark of Apple Inc., registered in the U.S. and other countries and regions.</span>
+  </footer>
+
+  <script>
+    // Look toggle, shared with the landing page through the same storage key.
+    (() => {
+      const root = document.documentElement, btn = document.getElementById("look");
+      const label = () => { const t = root.dataset.look === "b" ? "Switch to light mode" : "Switch to dark mode"; btn.setAttribute("aria-label", t); btn.title = t; };
+      btn.addEventListener("click", () => {
+        const next = root.dataset.look === "b" ? "a" : "b";
+        if (next === "b") root.dataset.look = "b"; else delete root.dataset.look;
+        try { localStorage.setItem("scene-look-dark", next); } catch (_) {}
+        label();
+      });
+      label();
+    })();
+
+    // Privacy request. The email and the token go to our API only (same base URL as visit.js and
+    // the waitlist form), nowhere else. README.md, "Privacy request page".
+    (() => {
+      const local = ["127.0.0.1", "localhost"].includes(location.hostname);
+      // Local only: ?port=8001 points it at a second server stack (README, Previewing locally).
+      const API = local ? `http://127.0.0.1:${new URLSearchParams(location.search).get("port") || "8000"}` : "https://api.askconductor.ai";
+      const token = new URLSearchParams(location.search).get("t");
+      const $ = (id) => document.getElementById(id);
+      const say = (el, text, err) => { el.textContent = text; el.classList.toggle("err", !!err); };
+      const post = (path, body) => fetch(API + path, {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+      });
+
+      if (token === null) {
+        $("request").hidden = false;
+        const form = $("request-form"), msg = $("request-msg");
+        const buttons = [...form.querySelectorAll("button")];
+        form.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const action = e.submitter && e.submitter.value;
+          const email = $("email").value.trim();
+          if (action !== "opt_out" && action !== "delete") return;
+          if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { say(msg, "Enter a valid email address.", true); return; }
+          buttons.forEach((b) => { b.disabled = true; });
+          say(msg, "Sending…");
+          try {
+            const r = await post("/v3/privacy-request", { email, action });
+            if (r.ok) {
+              say(msg, "Check your email. If that address belongs to a Conductor user, we've sent a link to confirm. It expires in 24 hours.");
+              return; // stays disabled: the request is in, a second click would only send a second email
+            }
+            say(msg, r.status === 429 ? "Too many requests, try again in an hour."
+              : r.status === 422 ? "Enter a valid email address." : "Something went wrong. Try again.", true);
+          } catch (_) {
+            say(msg, "Couldn't reach the server. Check your connection and try again.", true);
+          }
+          buttons.forEach((b) => { b.disabled = false; });
+        });
+      } else {
+        $("confirm").hidden = false;
+        const btn = $("confirm-btn"), msg = $("confirm-msg"), back = $("confirm-back");
+        const invalid = () => { say(msg, "This link is invalid or has expired.", true); back.hidden = false; btn.hidden = true; };
+        btn.addEventListener("click", async () => {
+          btn.disabled = true;
+          say(msg, "Confirming…");
+          try {
+            const r = await post("/v3/privacy-request/confirm", { t: token });
+            if (r.ok) {
+              const d = await r.json();
+              btn.hidden = true;
+              if (d.action === "delete") {
+                say(msg, "Your data has been deleted from Conductor. Our analytics provider removes its copy within 30 days, and backups expire within about 3 months. To remove what's on your Mac too, uninstall Conductor (Settings → Uninstall Conductor). To use Conductor again, join the waitlist again.");
+              } else {
+                say(msg, "You're no longer sharing usage and error reports. The app stops sending them the next time it opens.");
+              }
+              return;
+            }
+            if (r.status === 400) return invalid();
+            say(msg, r.status === 429 ? "Too many requests, try again in an hour." : "Something went wrong. Try again.", true);
+          } catch (_) {
+            say(msg, "Couldn't reach the server. Check your connection and try again.", true);
+          }
+          btn.disabled = false;
+        });
+      }
+    })();
+  </script>
+  <script src="/visit.js" defer></script>
+</body>
+</html>

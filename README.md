@@ -17,7 +17,8 @@ python3 -m http.server 8765 --bind 127.0.0.1
 ```
 
 Then open http://127.0.0.1:8765/ (or `/privacy.html`, `/download.html`; the download page starts
-the DMG download on arrival).
+the DMG download on arrival; `/privacy-request.html` and `/privacy-request.html?t=x` for the two states of the
+privacy request page, which posts to the server on `127.0.0.1:8000`; add `&port=8001` (or `?port=8001`) to use a second stack).
 
 The landing page is `index.html`: one Logic window pinned to the screen. A scroll grows it and
 blurs it, Conductor's panel comes out of the corner, and three stops step through (Learn as you
@@ -128,11 +129,30 @@ if the law requires) and sends web research queries to its search services; the 
 "our server" (user call 2026-10-27). The "never stored" lines say "on our server" because OpenAI
 holds what it receives for that window (user call 2026-11-13). "This website" describes the visit
 beacon and the site events: keep it in step with `visit.js` and the server's `visits` and site-event
-tables. It also covers the app's PostHog usage and error reports (what they hold, Settings off
-switch, US, IPs discarded, 12 months, deleted with the account): keep it in step with the client's
-analytics. The footer on every page
+tables. It also covers the app's PostHog usage and error reports (what they hold, no in-app off
+switch: opt-out and deletion go through `/privacy-request`, US, IPs discarded, 12 months, deleted
+with the account) and the server's own copy of its usage records sent to PostHog (never message
+text): keep it in step with the client's and server's analytics. The footer on every page
 links Privacy and
 hello@askconductor.ai (an iCloud+ custom-domain address).
+
+## Privacy request page
+
+`privacy-request.html` (served at `/privacy-request`; linked from `privacy.html`, the confirm email
+and the client) is how a beta user opts out of usage and error reports or deletes their data, since
+the reports are part of the beta and the app has no off switch (user call 2026-11-18). Noindex,
+no-referrer, no cookies; it still loads `visit.js` like every page (the beacon sends the path, never
+the query, so the token isn't recorded).
+- **No `?t=`:** an email field and two buttons (`opt_out`, `delete`) post JSON to the server's
+  `/v3/privacy-request`. The page says the same thing whether or not the email is known (the server
+  answers 202 for any well-formed request); the buttons stay disabled after success so a second click
+  doesn't send a second email. 429 and network errors show plain messages.
+- **With `?t=<token>`:** one Confirm button posts `{t}` to `/v3/privacy-request/confirm`. It never
+  submits on load, so an email link scanner can't confirm for the user. 400 `invalid_or_expired`
+  shows "This link is invalid or has expired" with a link back to `/privacy-request`.
+- The email and the token go only to our API (same base URL and local override as `visit.js` and
+  the waitlist form). The page's fallback line names version 0.5.0 as the first with the email
+  on file; keep it and `privacy.html` in step if that changes.
 
 ## Beta terms
 
