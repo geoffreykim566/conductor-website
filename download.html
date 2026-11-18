@@ -135,7 +135,9 @@
     })();
     // Start the download on arrival; the DMG is served as an attachment, so the page stays put.
     // The button is the fallback when a browser blocks or asks first.
-    setTimeout(() => { location.href = document.getElementById("download-cta").href; }, 800);
+    const cta = document.getElementById("download-cta");
+    cta.addEventListener("click", () => window.conductorEvent?.("download_click", "click"));
+    setTimeout(() => { window.conductorEvent?.("download_click", "auto"); location.href = cta.href; }, 800);
   </script>
   <script src="/visit.js" defer></script>
 </body>

@@ -93,6 +93,16 @@ capture must keep that size or the windows land in the wrong place.
 `visit.js` (loaded by every page) posts one beacon per page view to the server's `/v3/visit`,
 which feeds the admin Website tab (`server/app/api/README.md`, Funnel). No cookies, no third party.
 
+- **Site events** (`window.conductorEvent(kind, detail)` in `visit.js`, POST `/v3/site_event`,
+  same ids and `text/plain`, `?notrack` sends nothing): `download_click` (`download.html`,
+  detail `auto` after 800 ms or `click`), `signup_submit` / `signup_error` (the two waitlist
+  forms; detail is the form id, or the HTTP status / `network`; never the email), `demo_play`
+  (pill clicks only, detail `<stop>-<pill>`), `js_error` (detail `file:line`, no message, 3 per page
+  view; errors thrown before `visit.js` loads aren't seen), `scroll_depth` (landing page, 25/50/75/100
+  once each). Pages call it as `window.conductorEvent?.(...)`.
+- **No third-party analytics on the website, no PostHog** (user call 2026-11-18): only our own
+  beacon. The app's PostHog reports are a separate thing and are disclosed on the privacy page.
+
 - **Short links:** `/ig` `/tt` `/yt` `/x` `/th` `/fb` `/rd` `/dc` redirect to `/?utm_source=<tag>`
   (`_redirects`, 302). Put these in bios and posts: the tag is the only source that survives
   in-app browsers. A new platform is a line here plus its tag in `server/app/core/channel.py`.
@@ -117,7 +127,10 @@ means updating both, and if it changes what users agree to, bumping the client's
 if the law requires) and sends web research queries to its search services; the disclaimer only says
 "our server" (user call 2026-10-27). The "never stored" lines say "on our server" because OpenAI
 holds what it receives for that window (user call 2026-11-13). "This website" describes the visit
-beacon: keep it in step with `visit.js` and the server's `visits` table. The footer on every page
+beacon and the site events: keep it in step with `visit.js` and the server's `visits` and site-event
+tables. It also covers the app's PostHog usage and error reports (what they hold, Settings off
+switch, US, IPs discarded, 12 months, deleted with the account): keep it in step with the client's
+analytics. The footer on every page
 links Privacy and
 hello@askconductor.ai (an iCloud+ custom-domain address).
 

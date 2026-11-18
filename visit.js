@@ -1,5 +1,7 @@
 // Visit beacon: one POST per page view, sent once the visitor has looked at the page (~2 s
 // visible, or a scroll, tap or key). No cookies. README.md, "Visit counting".
+// Also window.conductorEvent(kind, detail): a few site events to /v3/site_event (same ids, same
+// ?notrack opt-out; never what a visitor types). Pages call it as `window.conductorEvent?.(...)`.
 (() => {
   const local = ["127.0.0.1", "localhost"].includes(location.hostname);
   const API = local ? "http://127.0.0.1:8000" : "https://api.askconductor.ai";
@@ -79,4 +81,29 @@
   EVENTS.forEach((e) => addEventListener(e, send, { capture: true, passive: true }));
   document.addEventListener("visibilitychange", onVisibility);
   onVisibility();
+
+  // Site events: download_click, signup_submit, signup_error, demo_play, js_error, scroll_depth.
+  const siteEvent = (kind, detail) => {
+    try {
+      fetch(API + "/v3/site_event", {
+        method: "POST", keepalive: true, headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify({ vid, sid, path: location.pathname, kind,
+          detail: detail == null ? null : String(detail).slice(0, 120), webdriver: !!navigator.webdriver }),
+      }).catch(() => {});
+    } catch (_) {}
+  };
+  window.conductorEvent = siteEvent;
+
+  // Page errors: where ("file:line"), never the message. At most 3 per page view.
+  let errors = 0;
+  const where = (file, line) => {
+    const base = String(file || "").split(/[?#]/)[0].split("/").pop();
+    return (base || "page") + ":" + (line || 0);
+  };
+  const jsError = (d) => { if (errors++ < 3) siteEvent("js_error", d); };
+  addEventListener("error", (e) => jsError(where(e.filename, e.lineno)));
+  addEventListener("unhandledrejection", (e) => {
+    const m = /([^\/\s()]+?)(?:[?#][^:\s)]*)?:(\d+):\d+/.exec((e.reason && e.reason.stack) || "");
+    jsError(m ? where(m[1], m[2]) : "promise:0");
+  });
 })();

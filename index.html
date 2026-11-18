@@ -606,20 +606,37 @@ body {
         msg.textContent = "Enter a valid email address."; msg.classList.add("err"); return;
       }
       btn.disabled = true; msg.textContent = "";
+      window.conductorEvent?.("signup_submit", form.id);
       try {
         const r = await fetch(API + "/v3/waitlist", {
           method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, source: source.slice(0, 100) || null, company: form.company.value }),
         });
         if (r.ok) return done();
+        window.conductorEvent?.("signup_error", r.status);
         msg.textContent = r.status === 429 ? "Too many tries. Try again in a bit."
           : r.status === 422 ? "Enter a valid email address." : "Something went wrong. Try again.";
       } catch (_) {
+        window.conductorEvent?.("signup_error", "network");
         msg.textContent = "Couldn't reach the server. Check your connection and try again.";
       }
       msg.classList.add("err"); btn.disabled = false;
     });
   });
+})();
+
+// Scroll depth: 25/50/75/100% of the page, each once per page view (our own beacon, visit.js).
+(() => {
+  const seen = new Set();
+  const check = () => {
+    const h = document.documentElement.scrollHeight - innerHeight;
+    if (h <= 0) return;
+    const pct = (scrollY / h) * 100;
+    [25, 50, 75, 100].forEach((m) => {
+      if (pct >= m - 1 && !seen.has(m)) { seen.add(m); window.conductorEvent?.("scroll_depth", m); }
+    });
+  };
+  addEventListener("scroll", check, { passive: true });
 })();
 
 // The scene.
@@ -970,7 +987,7 @@ body {
   const pills = (n, labels) => labels.forEach((label, i) => {
     const b = document.createElement("button");
     b.type = "button"; b.className = "ask"; b.id = `ask-${n}-${i}`; b.textContent = label;
-    b.addEventListener("click", () => { pick[n] = i; play(n); });
+    b.addEventListener("click", () => { pick[n] = i; play(n); window.conductorEvent?.("demo_play", `${n}-${i}`); });
     $("asks-" + n).appendChild(b);
   });
   pills(1, QUESTIONS.map((c) => c.label));
