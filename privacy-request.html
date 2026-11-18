@@ -212,7 +212,7 @@
               const d = await r.json();
               btn.hidden = true;
               if (d.action === "delete") {
-                say(msg, "Your data has been deleted from Conductor. Our analytics provider removes its copy within 30 days, and backups expire within about 3 months. To remove what's on your Mac too, uninstall Conductor (Settings → Uninstall Conductor). To use Conductor again, join the waitlist again.");
+                say(msg, "Your data has been deleted from Conductor. Our analytics provider removes its copy within 30 days, and backups expire within about 3 months. If you keep using Conductor, it asks you to set it up again and starts a new record. To remove what's on your Mac too, uninstall Conductor (Settings → Uninstall Conductor).");
               } else {
                 say(msg, "You're no longer sharing usage and error reports. The app stops sending them the next time it opens.");
               }
