@@ -138,6 +138,7 @@ body {
   position: absolute; left: 0; top: 0; width: 1920px; height: 960px;
   transform-origin: 0 0; will-change: transform;
 }
+.scene.timed { transition: transform 0.7s cubic-bezier(.2,.8,.2,1); } /* touch only, set in JS */
 .base { position: absolute; inset: 0; border-radius: 12px; overflow: hidden;
   box-shadow: 0 0 0 1.5px rgba(22, 16, 30, 0.10), 0 6px 16px rgba(22, 16, 30, 0.10), 0 40px 90px -20px rgba(22, 16, 30, 0.30), 0 110px 220px -50px rgba(22, 16, 30, 0.30); }
 :root[data-look="b"] .base { box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.10), 0 40px 120px rgba(0, 0, 0, 0.7); }
@@ -650,6 +651,10 @@ body {
   const lerp = (a, b, t) => a + (b - a) * t;
   const ease = (t) => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  // Touch screens: Logic's grow (main view → first slide) is a timed transition, not tied to the finger.
+  // iOS Safari scrolls on its own thread, so a transform set from JS on each scroll frame lands late and stutters.
+  const timed = matchMedia("(hover: none)").matches && !reduce;
+  let grown = false, lastF = 0;
 
   // Conductor's spot in each phase, in scene pixels. Home is where the app really sits.
   const PANEL = { home: [1335, 196, 1.5], feat: [1345, 108, 1.5] };
@@ -794,8 +799,15 @@ body {
     const rect = track.getBoundingClientRect();
     f = clamp(-rect.top / layout.vh, 0, STOPS);
     const t = ease(clamp(f, 0, 1));
+    if (timed) {
+      // grow once the scroll heads down, shrink once it heads back up
+      if (f >= 1 || (f > lastF && f > 0.03)) grown = true;
+      else if (f <= 0 || (f < lastF && f < 0.97)) grown = false;
+      lastF = f;
+    }
+    const tg = timed ? +grown : t;
     const { hero: h, full: g } = layout;
-    const s = lerp(h.s, g.s, t), x = lerp(h.x, g.x, t), y = lerp(h.y, g.y, t);
+    const s = lerp(h.s, g.s, tg), x = lerp(h.x, g.x, tg), y = lerp(h.y, g.y, tg);
     scene.style.transform = `translate(${x}px, ${y}px) scale(${s})`;
     hero.style.opacity = String(clamp(1 - t * 1.8, 0, 1));
     hero.style.transform = `translateY(${-t * 80}px)`;
@@ -807,9 +819,9 @@ body {
     dots.classList.toggle("on", f > 0.7);
 
     if (f < 1 && step <= 1) {
-      cp.classList.remove("glide");
+      cp.classList.toggle("glide", timed);
       const a = PANEL.home, b = PANEL.feat;
-      setPanel([lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t)]);
+      setPanel([lerp(a[0], b[0], tg), lerp(a[1], b[1], tg), lerp(a[2], b[2], tg)]);
     }
     const next = f < 0.5 ? 0 : clamp(Math.round(f), 1, STOPS);
     if (next !== step) go(next);
@@ -1253,6 +1265,8 @@ body {
   addEventListener("scroll", () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; render(); }); }, { passive: true });
   addEventListener("resize", measure);
   measure();
+  // after the first placement, so the page doesn't open with a zoom
+  if (timed) requestAnimationFrame(() => requestAnimationFrame(() => scene.classList.add("timed")));
 })();
 </script>
 <script src="/visit.js" defer></script>
