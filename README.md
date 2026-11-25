@@ -136,8 +136,12 @@ holds what it receives for that window (user call 2026-11-13). "This website" de
 beacon and the site events: keep it in step with `visit.js` and the server's `visits` and site-event
 tables. It also covers the app's PostHog usage and error reports (what they hold, no in-app off
 switch: opt-out and deletion go through `/privacy-request`, US, IPs discarded, 12 months, deleted
-with the account) and the server's own copy of its usage records sent to PostHog (never message
-text): keep it in step with the client's and server's analytics. The footer on every page
+with the account) and the server's own copy of its usage records and error reports sent to PostHog
+(never message text; the list there says "such as" because the server's events grow, server
+`app/core/README.md`, Telemetry): keep it in step with the client's and server's analytics. Deleting
+on `/privacy-request` is immediate on our server, an emailed request takes up to 30 days, and
+PostHog removes events in weekly batches with about two more weeks of backups (its data-deletion
+docs, read 2026-11-24), so the page says up to a month for those. The footer on every page
 links Privacy and
 hello@askconductor.ai (an iCloud+ custom-domain address).
 
@@ -161,10 +165,13 @@ the query, so the token isn't recorded).
 
 ## Beta terms
 
-`terms.html` (served at `/terms`, linked in every footer) holds the six beta lines the client's setup
+`terms.html` (served at `/terms`, linked in every footer) holds the seven beta lines the client's setup
 screen links (`config.TERMS_URL`): as is, keep backups, auto-run is at your own risk, no liability to
-the extent the law allows, use only for your own work in Logic and lawfully, and we can limit or end
-access. The last two went in now because OpenAI's services agreement (3.3, 8.1) makes us responsible
+the extent the law allows, use only for your own work in Logic and lawfully, we can limit or end
+access, and the app updates itself. The seventh went in with 0.5.1's auto-update (legal pass
+2026-11-24): a downloaded update installs at quit even after "Later", no US rule asks for a notice,
+and the EU's digital content rules (2019/770 Art. 8) ask that users are told about updates; it rides
+on consent v4, which hadn't shipped. The last two went in now because OpenAI's services agreement (3.3, 8.1) makes us responsible
 for what users do and requires that we can cut a user off, so they don't wait for the full terms of
 service (user call 2026-11-13). Consent stays v3, because v3 has not shipped. The terms go on their
 own page, not in the popup (shorter) and not in the privacy policy (a notice, not an agreement,
